@@ -49,6 +49,8 @@ export default function OutfitGeneratorPage() {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [weather, setWeather] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [manualLocation, setManualLocation] = useState('');
+  const [showManualLocation, setShowManualLocation] = useState(false);
 
   // Onboarding state
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -75,7 +77,23 @@ export default function OutfitGeneratorPage() {
         },
         (error) => {
           console.error('Geolocation error:', error);
-          setLocationError('Unable to retrieve your location. Weather features will be disabled. Please check your browser location settings.');
+          let errorMessage = 'Unable to retrieve your location. Weather features will be disabled.';
+          
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location access denied. Please enable location permissions in your browser settings or allow location access when prompted.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information unavailable. Weather features will be disabled.';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out. Weather features will be disabled.';
+              break;
+            default:
+              errorMessage = 'Unable to retrieve your location. Weather features will be disabled.';
+          }
+          
+          setLocationError(errorMessage);
         }
       );
     } else {
@@ -176,6 +194,28 @@ export default function OutfitGeneratorPage() {
       setShowLoginPrompt(false);
       setLoginModalOpen(true);
   }
+
+  const handleManualLocationSubmit = async () => {
+    if (!manualLocation.trim()) return;
+    
+    try {
+      // Use a geocoding service to convert city name to coordinates
+      const response = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(manualLocation)}&limit=1&appid=YOUR_API_KEY`);
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        setLocation({ latitude: lat, longitude: lon });
+        setLocationError(null);
+        setShowManualLocation(false);
+        setManualLocation('');
+      } else {
+        setLocationError('Location not found. Please try a different city name.');
+      }
+    } catch (error) {
+      setLocationError('Failed to set location. Please try again.');
+    }
+  };
 
   // --- Onboarding Handlers ---
   const handleOnboardingOpenChange = (open: boolean) => {
@@ -506,7 +546,15 @@ export default function OutfitGeneratorPage() {
                    <span>{weather}</span>
                   </>
                 ) : locationError ? (
-                  <span className="text-xs text-destructive">{locationError}</span>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-destructive">{locationError}</span>
+                    <button
+                      onClick={() => setShowManualLocation(!showManualLocation)}
+                      className="text-xs text-accent hover:underline"
+                    >
+                      {showManualLocation ? 'Cancel' : 'Enter location manually'}
+                    </button>
+                  </div>
                 ) : (
                   <>
                     <Skeleton className="w-5 h-5 rounded-full" />
@@ -529,6 +577,26 @@ export default function OutfitGeneratorPage() {
                 )
              )}
           </div>
+          
+          {showManualLocation && (
+            <div className="flex gap-2 items-center p-3 bg-secondary/30 rounded-lg">
+              <input
+                type="text"
+                placeholder="Enter city name (e.g., New York, London)"
+                value={manualLocation}
+                onChange={(e) => setManualLocation(e.target.value)}
+                className="flex-1 px-3 py-2 text-sm border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                onKeyPress={(e) => e.key === 'Enter' && handleManualLocationSubmit()}
+              />
+              <Button
+                onClick={handleManualLocationSubmit}
+                disabled={!manualLocation.trim()}
+                size="sm"
+              >
+                Set
+              </Button>
+            </div>
+          )}
           
           {!ignoreCloset && !closetLoading && closetItems.length === 0 && !showOnboarding && (
             <Alert>

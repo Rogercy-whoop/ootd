@@ -73,8 +73,9 @@ export default function OutfitGeneratorPage() {
           });
           setLocationError(null);
         },
-        () => {
-          setLocationError('Unable to retrieve your location. Weather features will be disabled.');
+        (error) => {
+          console.error('Geolocation error:', error);
+          setLocationError('Unable to retrieve your location. Weather features will be disabled. Please check your browser location settings.');
         }
       );
     } else {

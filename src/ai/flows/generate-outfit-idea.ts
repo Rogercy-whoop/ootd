@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -12,7 +11,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {getCurrentWeather} from '@/ai/tools/weather';
+import {getCurrentWeather, fetchWeather} from '@/ai/tools/weather';
 import {z} from 'zod';
 
 // We'll use Gemini directly instead of through genkit plugins
@@ -61,6 +60,13 @@ export type GenerateOutfitIdeaInput = z.infer<typeof GenerateOutfitIdeaInputSche
 const GenerateOutfitIdeaOutputSchema = z.object({
   outfitDescription: z.string().describe('A concise, 2-3 sentence description of the suggested outfit.'),
   itemIds: z.array(z.string()).describe("An array of IDs of the clothing items from the closet that make up the suggested outfit. This can be empty if no suitable items are found."),
+  missingItems: z.array(z.string()).optional().describe("Items that would be perfect for this weather/occasion but are missing from the closet."),
+  weatherWarnings: z.array(z.string()).optional().describe("Weather-specific warnings about missing items."),
+  alternativeOutfits: z.array(z.object({
+    outfitDescription: z.string(),
+    itemIds: z.array(z.string()),
+    reason: z.string()
+  })).optional().describe("Alternative outfit options for the same occasion/weather.")
 });
 
 export type GenerateOutfitIdeaOutput = z.infer<typeof GenerateOutfitIdeaOutputSchema>;
@@ -79,38 +85,74 @@ const generateOutfitWithGemini = async (input: GenerateOutfitIdeaInput): Promise
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
+  // Get weather data if available
+  let weatherData = null;
+  if (input.latitude && input.longitude) {
+    try {
+      weatherData = await fetchWeather({ latitude: input.latitude, longitude: input.longitude });
+    } catch (error) {
+      console.error('Failed to fetch weather:', error);
+    }
+  }
+
   // Build the prompt
-  let prompt = `You are an expert personal stylist. Generate a single, stylish outfit suggestion as a JSON object. Your description must be concise (2-3 sentences).
+  let prompt = `You are an expert personal stylist. Generate a comprehensive outfit suggestion with weather awareness and multiple options as a JSON object.
 
 # CONTEXT
-- Weather: ${input.latitude && input.longitude ? 'Use weather data for the location' : 'Weather data not available'}
+- Weather: ${weatherData ? weatherData : 'Weather data not available'}
 ${input.occasion ? `- Occasion: ${input.occasion}` : ''}
 ${input.inspirationItems ? `- Style Inspiration: ${input.inspirationItems.map(item => item.description).join(', ')}` : ''}
 
 # TASK
-Based on the context, create a stylish outfit.
+Create a weather-appropriate outfit with intelligent suggestions for missing items.
 
 ${input.closetItems ? `
-## TASK: CREATE OUTFIT FROM CLOSET
+## TASK: CREATE WEATHER-AWARE OUTFIT FROM CLOSET
 
 ### Available Items
 ${input.closetItems.map(item => 
   `- ID: ${item.id}, Category: ${item.category}${item.subCategory ? `, Item: ${item.subCategory}` : ''}, Tags: ${item.tags.join(', ')}`
 ).join('\n')}
 
-Your 'outfitDescription' should be concise (2-3 sentences), describe the look, and explain WHY you chose it based on the context.
-Your 'itemIds' array MUST contain the IDs of the chosen items.
+### WEATHER-AWARE LOGIC:
+1. If it's RAINY/STORMY and user has no raincoat/umbrella: Suggest what they have but warn about missing rain protection
+2. If it's SUNNY/HOT and user has t-shirt but no shorts (only long pants): Suggest t-shirt + pants but recommend shorts for comfort
+3. If it's COLD and user has no warm jacket: Suggest layers but warn about missing warm outerwear
+4. Always prioritize user's existing items but be honest about what's missing
+
+### REQUIREMENTS:
+- Your 'outfitDescription' should be 2-3 sentences explaining the choice and any weather considerations
+- Your 'itemIds' array MUST contain the IDs of the chosen items from their closet
+- Your 'missingItems' array should list specific items they should add (e.g., "raincoat", "shorts", "warm jacket")
+- Your 'weatherWarnings' array should contain specific weather-related warnings (e.g., "It's raining but you don't have a raincoat - consider adding one!")
+- Your 'alternativeOutfits' array should contain 2-3 alternative combinations using their existing items
+
 ` : `
 ## TASK: CREATE GENERAL OUTFIT
 Your 'outfitDescription' should be stylish, helpful, and concise (2-3 sentences).
 Your 'itemIds' array MUST be empty.
+Your 'missingItems' array should suggest basic wardrobe essentials.
 `}
 
 # OUTPUT FORMAT
 Return ONLY a JSON object with this exact structure:
 {
-  "outfitDescription": "2-3 sentence description",
-  "itemIds": ["id1", "id2", ...]
+  "outfitDescription": "2-3 sentence description with weather considerations",
+  "itemIds": ["id1", "id2", ...],
+  "missingItems": ["item1", "item2", ...],
+  "weatherWarnings": ["warning1", "warning2", ...],
+  "alternativeOutfits": [
+    {
+      "outfitDescription": "Alternative 1 description",
+      "itemIds": ["id1", "id3"],
+      "reason": "Why this alternative works"
+    },
+    {
+      "outfitDescription": "Alternative 2 description", 
+      "itemIds": ["id2", "id4"],
+      "reason": "Why this alternative works"
+    }
+  ]
 }`;
 
   const result = await model.generateContent(prompt);
@@ -123,7 +165,10 @@ Return ONLY a JSON object with this exact structure:
       const parsed = JSON.parse(jsonMatch[0]);
       return {
         outfitDescription: parsed.outfitDescription || 'A stylish outfit suggestion',
-        itemIds: parsed.itemIds || []
+        itemIds: parsed.itemIds || [],
+        missingItems: parsed.missingItems || [],
+        weatherWarnings: parsed.weatherWarnings || [],
+        alternativeOutfits: parsed.alternativeOutfits || []
       };
     }
   } catch (error) {
@@ -133,7 +178,10 @@ Return ONLY a JSON object with this exact structure:
     // Fallback response
   return {
     outfitDescription: 'A stylish outfit suggestion based on your preferences and available items.',
-    itemIds: input.closetItems ? input.closetItems.slice(0, 2).map(item => item.id) : []
+    itemIds: input.closetItems ? input.closetItems.slice(0, 2).map(item => item.id) : [],
+    missingItems: [],
+    weatherWarnings: [],
+    alternativeOutfits: []
   };
 };
 

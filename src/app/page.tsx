@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCloset } from '@/context/ClosetContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Lightbulb, Zap, Heart, AlertCircle, RefreshCw, Upload, X, PartyPopper, Loader2, Info, Sun, Cloud, Snowflake } from 'lucide-react';
+import { Lightbulb, Zap, Heart, AlertCircle, RefreshCw, Upload, X, PartyPopper, Loader2, Info, Sun, Cloud, Snowflake, Eye } from 'lucide-react';
 import type { ClothingItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
@@ -44,6 +44,7 @@ export default function OutfitGeneratorPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [outfitIdea, setOutfitIdea] = useState<GenerateOutfitIdeaOutput | null>(null);
+  const [currentOutfitIndex, setCurrentOutfitIndex] = useState(0);
   const { toast } = useToast();
 
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -112,10 +113,11 @@ export default function OutfitGeneratorPage() {
   useEffect(() => {
     if (!closetLoading && closetItems.length === 0) {
       const onboardingComplete = sessionStorage.getItem('onboardingComplete');
-      if (!onboardingComplete) {
+      // For testing: Make onboarding mandatory by removing the check
+      // if (!onboardingComplete) {
         setShowOnboarding(true);
         setOnboardingStep(0);
-      }
+      // }
     }
   }, [closetLoading, closetItems]);
   
@@ -139,6 +141,7 @@ export default function OutfitGeneratorPage() {
     setError(null);
     setLoading(true);
     setOutfitIdea(null);
+    setCurrentOutfitIndex(0);
 
     try {
       // Sanitize closet items by removing the large image data to prevent exceeding server action limits.
@@ -173,14 +176,43 @@ export default function OutfitGeneratorPage() {
     }
   };
 
-  const suggestedItems = (outfitIdea?.itemIds || [])
+  const handleTryAnotherOutfit = () => {
+    if (outfitIdea?.alternativeOutfits && outfitIdea.alternativeOutfits.length > 0) {
+      setCurrentOutfitIndex((prev) => {
+        const nextIndex = (prev + 1) % (outfitIdea.alternativeOutfits!.length + 1);
+        return nextIndex;
+      });
+    }
+  };
+
+  const getCurrentOutfit = () => {
+    if (!outfitIdea) return null;
+    
+    if (currentOutfitIndex === 0) {
+      return {
+        outfitDescription: outfitIdea.outfitDescription,
+        itemIds: outfitIdea.itemIds,
+        reason: "Primary suggestion"
+      };
+    }
+    
+    const alternativeIndex = currentOutfitIndex - 1;
+    if (outfitIdea.alternativeOutfits && outfitIdea.alternativeOutfits[alternativeIndex]) {
+      return outfitIdea.alternativeOutfits[alternativeIndex];
+    }
+    
+    return null;
+  };
+
+  const currentOutfit = getCurrentOutfit();
+  const suggestedItems = (currentOutfit?.itemIds || [])
     .map(id => closetItems.find(item => item.id === id))
     .filter((item): item is ClothingItem => !!item);
 
   const handleSaveInspiration = () => {
-    if (outfitIdea) {
+    if (currentOutfit) {
       addInspirationItem({
-        description: outfitIdea.outfitDescription,
+        description: currentOutfit.outfitDescription,
         items: suggestedItems,
       });
       toast({
@@ -525,6 +557,9 @@ export default function OutfitGeneratorPage() {
           <p className="text-sm text-muted-foreground">
             Describe an occasion for a tailored suggestion, or leave it blank for a general idea.
           </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            New here? Feel free to add one or two items whenever you're free! The more items in your closet, the better your outfit suggestions will be.
+          </p>
         </div>
         <div className="p-6 pt-0 space-y-6">
           <div className="space-y-2">
@@ -644,9 +679,28 @@ export default function OutfitGeneratorPage() {
                     <h3 className="text-2xl font-semibold leading-none tracking-tight font-headline flex items-center gap-2 pr-4">
                         <Lightbulb className="w-6 h-6 text-accent" />
                         Your Outfit Idea
+                        {outfitIdea.alternativeOutfits && outfitIdea.alternativeOutfits.length > 0 && (
+                          <span className="text-sm font-normal text-muted-foreground">
+                            ({currentOutfitIndex + 1} of {outfitIdea.alternativeOutfits.length + 1})
+                          </span>
+                        )}
                     </h3>
                      <TooltipProvider>
-                        <div className="flex items-center -mt-1 -mr-2">
+                        <div className="flex items-center -mt-1 -mr-2 gap-1">
+                            {outfitIdea.alternativeOutfits && outfitIdea.alternativeOutfits.length > 0 && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={handleTryAnotherOutfit} className="text-accent hover:text-primary">
+                                        <RefreshCw className="w-5 h-5" />
+                                        <span className="sr-only">Try Another Outfit</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Try another outfit option</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" onClick={handleGenerate} disabled={loading} className="text-accent hover:text-primary">
@@ -655,7 +709,7 @@ export default function OutfitGeneratorPage() {
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>Get another idea</p>
+                                    <p>Generate new ideas</p>
                                 </TooltipContent>
                             </Tooltip>
 
@@ -670,12 +724,60 @@ export default function OutfitGeneratorPage() {
                                     <p>Save to Inspiration</p>
                                 </TooltipContent>
                             </Tooltip>
+
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" asChild className="text-accent hover:text-primary">
+                                        <Link href="/viewer">
+                                            <Eye className="w-5 h-5" />
+                                            <span className="sr-only">View in 3D</span>
+                                        </Link>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>View in 3D</p>
+                                </TooltipContent>
+                            </Tooltip>
                         </div>
                     </TooltipProvider>
                 </div>
+                
                 <div className="pt-6">
-                    <p className="text-foreground/90 whitespace-pre-wrap">{outfitIdea.outfitDescription}</p>
+                    <p className="text-foreground/90 whitespace-pre-wrap">{currentOutfit?.outfitDescription}</p>
+                    {currentOutfit?.reason && currentOutfit.reason !== "Primary suggestion" && (
+                      <p className="text-sm text-muted-foreground mt-2 italic">Why this works: {currentOutfit.reason}</p>
+                    )}
                 </div>
+
+                {/* Weather Warnings */}
+                {outfitIdea.weatherWarnings && outfitIdea.weatherWarnings.length > 0 && (
+                  <div className="pt-4">
+                    <Alert variant="default" className="bg-yellow-50 border-yellow-200">
+                      <AlertCircle className="h-4 w-4 text-yellow-600" />
+                      <AlertTitle className="text-yellow-800">Weather Alert</AlertTitle>
+                      <AlertDescription className="text-yellow-700">
+                        {outfitIdea.weatherWarnings.map((warning, index) => (
+                          <div key={index} className="mt-1">• {warning}</div>
+                        ))}
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+
+                {/* Missing Items Suggestions */}
+                {outfitIdea.missingItems && outfitIdea.missingItems.length > 0 && (
+                  <div className="pt-4">
+                    <Alert variant="default" className="bg-blue-50 border-blue-200">
+                      <Info className="h-4 w-4 text-blue-600" />
+                      <AlertTitle className="text-blue-800">Consider Adding</AlertTitle>
+                      <AlertDescription className="text-blue-700">
+                        {outfitIdea.missingItems.map((item, index) => (
+                          <div key={index} className="mt-1">• {item}</div>
+                        ))}
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
                 
                 {suggestedItems.length > 0 && (
                   <div className="pt-6">

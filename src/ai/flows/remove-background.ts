@@ -44,7 +44,7 @@ const removeBackgroundFlow = ai.defineFlow(
       }
 
       const genAI = new GoogleGenerativeAI(geminiAPIKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
       // Convert data URI to base64
       const base64Data = input.photoDataUri.split(',')[1];

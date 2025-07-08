@@ -45,6 +45,7 @@ export default function OutfitGeneratorPage() {
   const [error, setError] = useState<string | null>(null);
   const [outfitIdea, setOutfitIdea] = useState<GenerateOutfitIdeaOutput | null>(null);
   const [currentOutfitIndex, setCurrentOutfitIndex] = useState(0);
+  const [testingMode, setTestingMode] = useState(false);
   const { toast } = useToast();
 
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -113,11 +114,19 @@ export default function OutfitGeneratorPage() {
   useEffect(() => {
     if (!closetLoading && closetItems.length === 0) {
       const onboardingComplete = sessionStorage.getItem('onboardingComplete');
-      // For testing: Make onboarding mandatory by removing the check
-      // if (!onboardingComplete) {
+      const isTestingMode = localStorage.getItem('testingMode') === 'true';
+      
+      // For testing: Skip onboarding if testing mode is enabled
+      if (isTestingMode) {
+        console.log('Testing mode enabled - skipping onboarding');
+        return;
+      }
+      
+      // For real users: Make onboarding mandatory
+      if (!onboardingComplete) {
         setShowOnboarding(true);
         setOnboardingStep(0);
-      // }
+      }
     }
   }, [closetLoading, closetItems]);
   
@@ -246,6 +255,24 @@ export default function OutfitGeneratorPage() {
       }
     } catch (error) {
       setLocationError('Failed to set location. Please try again.');
+    }
+  };
+
+  const toggleTestingMode = () => {
+    const newMode = !testingMode;
+    setTestingMode(newMode);
+    localStorage.setItem('testingMode', newMode.toString());
+    
+    if (newMode) {
+      toast({
+        title: "Testing Mode Enabled",
+        description: "Onboarding is now skipped. You can test the app without uploading 5 items.",
+      });
+    } else {
+      toast({
+        title: "Testing Mode Disabled",
+        description: "Onboarding is now mandatory for new users.",
+      });
     }
   };
 
@@ -546,6 +573,20 @@ export default function OutfitGeneratorPage() {
         <p className="mt-4 text-lg text-foreground/80">
           Let our AI craft the perfect outfit for you, based on your closet, your style, and the weather.
         </p>
+        
+        {/* Testing Mode Toggle - Only visible in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <Switch
+              id="testing-mode"
+              checked={testingMode}
+              onCheckedChange={toggleTestingMode}
+            />
+            <Label htmlFor="testing-mode" className="text-sm">
+              Testing Mode (Skip Onboarding)
+            </Label>
+          </div>
+        )}
       </div>
 
       <div className="rounded-lg border bg-card text-card-foreground shadow-lg">

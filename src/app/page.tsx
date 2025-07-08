@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -147,6 +146,14 @@ export default function OutfitGeneratorPage() {
   }, [user, authLoading]);
 
   const handleGenerate = async () => {
+    if (!testingMode && closetItems.length < 5) {
+      toast({
+        variant: 'destructive',
+        title: 'Action Required',
+        description: 'Please finish the first-time user instructions before starting. Add at least 5 items to your closet.',
+      });
+      return;
+    }
     setError(null);
     setLoading(true);
     setOutfitIdea(null);

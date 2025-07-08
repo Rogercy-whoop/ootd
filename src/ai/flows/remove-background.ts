@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import {GoogleGenerativeAI} from '@google/generative-ai';
+import fetch from 'node-fetch';
 
 const RemoveBackgroundInputSchema = z.object({
   photoDataUri: z
@@ -38,37 +39,71 @@ const removeBackgroundFlow = ai.defineFlow(
   },
   async (input) => {
     try {
-      const geminiAPIKey = process.env.GEMINI_API_KEY;
-      if (!geminiAPIKey) {
-        throw new Error('Gemini API key not found');
+      const apiToken = process.env.REPLICATE_API_TOKEN;
+      if (!apiToken) {
+        throw new Error('REPLICATE_API_TOKEN is not set in the environment.');
       }
 
-      const genAI = new GoogleGenerativeAI(geminiAPIKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      // Convert data URI to base64 (strip prefix)
+      const base64 = input.photoDataUri.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
 
-      // Convert data URI to base64
-      const base64Data = input.photoDataUri.split(',')[1];
-      
-      // Create image part for Gemini
-      const imagePart = {
-        inlineData: {
-          data: base64Data,
-          mimeType: 'image/jpeg' // You might want to detect this from the data URI
+      // Replicate expects a public URL, so we need to upload the image to a temporary host
+      // For now, let's use https://tmpfiles.org/api/v1/upload (free, public, for demo)
+      // In production, use your own storage (S3, Firebase Storage, etc.)
+      const uploadRes = await fetch('https://tmpfiles.org/api/v1/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: Buffer.from(base64, 'base64'),
+      });
+      const uploadJson = await uploadRes.json();
+      if (!uploadJson || !uploadJson.data || !uploadJson.data.url) {
+        throw new Error('Failed to upload image for background removal.');
+      }
+      const imageUrl = uploadJson.data.url;
+
+      // Call Replicate API
+      const response = await fetch('https://api.replicate.com/v1/predictions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${apiToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          version: '1c6b0b7b5c7e4c7e8e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e', // carvedrock/background-removal
+          input: { image: imageUrl },
+        }),
+      });
+      const json = await response.json();
+      if (!json || !json.urls || !json.urls.get) {
+        throw new Error('Failed to start background removal prediction.');
+      }
+
+      // Poll for result
+      let resultUrl = json.urls.get;
+      let outputUrl = null;
+      for (let i = 0; i < 20; i++) {
+        const pollRes = await fetch(resultUrl, {
+          headers: { 'Authorization': `Token ${apiToken}` },
+        });
+        const pollJson = await pollRes.json();
+        if (pollJson.status === 'succeeded' && pollJson.output) {
+          outputUrl = pollJson.output;
+          break;
         }
-      };
+        if (pollJson.status === 'failed') {
+          throw new Error('Background removal failed.');
+        }
+        await new Promise(res => setTimeout(res, 1500));
+      }
+      if (!outputUrl) {
+        throw new Error('Background removal timed out.');
+      }
 
-      // Use Gemini to generate a new image with transparent background
-      const prompt = `Remove the background from this clothing item image and return a new image with a transparent background. Focus only on the clothing item and make the background completely transparent.`;
-
-      const result = await model.generateContent([prompt, imagePart]);
-      const response = await result.response;
-      
-      // Note: Gemini's current API doesn't directly return images with transparent backgrounds
-      // This is a limitation of the current API. For now, we'll return the original image
-      // In a production environment, you might want to use a dedicated background removal service
-      
-      console.log('Background removal requested, but Gemini API limitation prevents transparent background generation');
-      return { photoDataUri: input.photoDataUri };
+      // Download the transparent PNG and convert to data URI
+      const imgRes = await fetch(Array.isArray(outputUrl) ? outputUrl[0] : outputUrl);
+      const imgBuffer = await imgRes.buffer();
+      const resultDataUri = `data:image/png;base64,${imgBuffer.toString('base64')}`;
+      return { photoDataUri: resultDataUri };
       
     } catch (error) {
       console.error('Background removal failed:', error);

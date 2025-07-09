@@ -12,8 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import {GoogleGenerativeAI} from '@google/generative-ai';
 import fetch from 'node-fetch';
-import { storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { adminStorage } from '@/lib/firebaseAdmin';
 
 const RemoveBackgroundInputSchema = z.object({
   photoDataUri: z
@@ -49,32 +48,31 @@ const removeBackgroundFlow = ai.defineFlow(
       // Convert data URI to base64 (strip prefix)
       const base64 = input.photoDataUri.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
 
-      // Upload to Firebase Storage instead of tmpfiles.org
+      // Upload to Firebase Storage using Admin SDK
       let imageUrl: string;
-      
-      if (storage) {
-        try {
-          // Create a unique filename
-          const filename = `background-removal/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-          const storageRef = ref(storage, filename);
-          
-          // Convert base64 to buffer
-          const buffer = Buffer.from(base64, 'base64');
-          
-          // Upload to Firebase Storage
-          await uploadBytes(storageRef, buffer, {
-            contentType: 'image/jpeg',
-            cacheControl: 'public, max-age=3600' // Cache for 1 hour
-          });
-          
-          // Get the public URL
-          imageUrl = await getDownloadURL(storageRef);
-        } catch (firebaseError) {
-          console.error('Firebase Storage upload failed:', firebaseError);
-          throw new Error('Failed to upload image to storage for background removal.');
-        }
-      } else {
-        throw new Error('Firebase Storage is not configured.');
+      try {
+        // Create a unique filename
+        const filename = `background-removal/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+        const bucket = adminStorage.bucket();
+        const file = bucket.file(filename);
+
+        // Convert base64 to buffer
+        const buffer = Buffer.from(base64, 'base64');
+
+        // Upload to Firebase Storage
+        await file.save(buffer, {
+          contentType: 'image/jpeg',
+          public: true, // Make the file publicly accessible
+          metadata: {
+            cacheControl: 'public, max-age=3600',
+          },
+        });
+
+        // Get the public URL
+        imageUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+      } catch (firebaseError) {
+        console.error('Firebase Storage upload failed:', firebaseError);
+        throw new Error('Failed to upload image to storage for background removal.');
       }
 
       // Call Replicate API

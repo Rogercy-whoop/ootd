@@ -28,7 +28,7 @@ export function UpgradeModal() {
   const monthlyStripeLink = "https://buy.stripe.com/bJe28q1H5e63d1vdVp5AR0k"; // <-- PASTE YOUR MONTHLY STRIPE LINK HERE
   //
   //     - Copy the URL for your annual payment link and paste it below.
-  const annualStripeLink = "https://buy.stripe.com/6oUbJ0bhF7HF1iNbNh5AR0l"; // <-- PASTE YOUR ANNUAL STRIPE LINK HERE
+  const annualStripeLink = "https://buy.stripe.com/9B68wO1H5aTR1iNcRl5AR0W"; // <-- UPDATED ANNUAL STRIPE LINK
   //
   // 3.  IMPORTANT NEXT STEP - AUTOMATING PREMIUM ACCESS (WEBHOOK):
   //     After a user pays, you need a way for Stripe to tell your app to grant them
@@ -79,7 +79,12 @@ export function UpgradeModal() {
             <CardHeader className="p-4">
               <CardTitle className="font-headline">Annual</CardTitle>
                <p className="text-2xl font-bold">$43.00<span className="text-sm font-normal text-muted-foreground">/year</span></p>
-              <CardDescription>Billed annually.</CardDescription>
+              <CardDescription>
+                <span className="font-bold text-accent">Special for Early Adopters!</span><br />
+                You are among our first set of users and get a <span className="font-bold">bulk discount</span> for your first year!<br />
+                <span className="line-through text-muted-foreground">$47.00</span> <span className="text-accent font-bold">$43.00</span> for your first year.<br />
+                <span className="text-xs text-muted-foreground">This is a big save for our original annual plan!</span>
+              </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <ul className="space-y-2 text-sm text-foreground/90 mb-6">

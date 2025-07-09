@@ -824,7 +824,7 @@ export default function OutfitGeneratorPage() {
                       <AlertTitle className="text-blue-800">Consider Adding</AlertTitle>
                       <AlertDescription className="text-blue-700">
                         {outfitIdea.missingItems.map((item, index) => (
-                          <div key={index} className="mt-1">• {typeof item === 'string' ? item : item.name || item.description || 'Item'}</div>
+                          <div key={index} className="mt-1">• {typeof item === 'string' ? item : (item as any).name || (item as any).description || 'Item'}</div>
                         ))}
                       </AlertDescription>
                     </Alert>

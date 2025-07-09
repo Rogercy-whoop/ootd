@@ -57,10 +57,16 @@ const GenerateOutfitIdeaInputSchema = z.object({
 
 export type GenerateOutfitIdeaInput = z.infer<typeof GenerateOutfitIdeaInputSchema>;
 
+const MissingItemSchema = z.object({
+  name: z.string().describe('The name of the missing item.'),
+  description: z.string().describe('A short description of the item.'),
+  imageUrl: z.string().optional().describe('A generic image URL for the item.')
+});
+
 const GenerateOutfitIdeaOutputSchema = z.object({
   outfitDescription: z.string().describe('A concise, 2-3 sentence description of the suggested outfit.'),
   itemIds: z.array(z.string()).describe("An array of IDs of the clothing items from the closet that make up the suggested outfit. This can be empty if no suitable items are found."),
-  missingItems: z.array(z.string()).optional().describe("Items that would be perfect for this weather/occasion but are missing from the closet."),
+  missingItems: z.array(z.union([z.string(), MissingItemSchema])).optional().describe("Items that would be perfect for this weather/occasion but are missing from the closet."),
   weatherWarnings: z.array(z.string()).optional().describe("Weather-specific warnings about missing items."),
   alternativeOutfits: z.array(z.object({
     outfitDescription: z.string(),

@@ -98,6 +98,10 @@ const generateOutfitWithGemini = async (input: GenerateOutfitIdeaInput): Promise
   // Build the prompt
   let prompt = `You are an expert personal stylist. Generate a comprehensive outfit suggestion with weather awareness, professional color theory, and daily fashion trends as a JSON object.
 
+# STYLE
+- Your answer should be direct, clear, and pleasant to read.
+- When recommending items not in the user's closet, suggest common daily-wear items (e.g., white t-shirt, blue jeans, sneakers, black dress, etc.) that are easy to find and versatile.
+
 # CONTEXT
 - Weather: ${weatherData ? weatherData : 'Weather data not available'}
 ${input.occasion ? `- Occasion: ${input.occasion}` : ''}
@@ -129,7 +133,7 @@ ${input.closetItems.map(item =>
 ### REQUIREMENTS:
 - Your 'outfitDescription' should be 2-3 sentences explaining the choice, any weather considerations, and the color theory or fashion trend applied
 - Your 'itemIds' array MUST contain the IDs of the chosen items from their closet
-- Your 'missingItems' array should list specific items they should add (e.g., "raincoat", "shorts", "warm jacket")
+- Your 'missingItems' array should list specific items they should add (e.g., "raincoat", "shorts", "warm jacket"). If you recommend an item not in the closet, prefer common daily-wear items and provide a short description (and a generic image URL if possible).
 - Your 'weatherWarnings' array should contain specific weather-related warnings (e.g., "It's raining but you don't have a raincoat - consider adding one!")
 - Your 'alternativeOutfits' array should contain 2-3 alternative combinations using their existing items
 
@@ -137,7 +141,7 @@ ${input.closetItems.map(item =>
 ## TASK: CREATE GENERAL OUTFIT
 Your 'outfitDescription' should be stylish, helpful, and concise (2-3 sentences), and mention the color theory or fashion trend used.
 Your 'itemIds' array MUST be empty.
-Your 'missingItems' array should suggest basic wardrobe essentials.
+Your 'missingItems' array should suggest basic wardrobe essentials, and for each, provide a short description and a generic image URL if possible.
 `}
 
 # OUTPUT FORMAT
@@ -145,7 +149,10 @@ Return ONLY a JSON object with this exact structure:
 {
   "outfitDescription": "2-3 sentence description with weather, color theory, and fashion trend considerations",
   "itemIds": ["id1", "id2", ...],
-  "missingItems": ["item1", "item2", ...],
+  "missingItems": [
+    { "name": "item1", "description": "Short description", "imageUrl": "https://..." },
+    { "name": "item2", "description": "Short description", "imageUrl": "https://..." }
+  ],
   "weatherWarnings": ["warning1", "warning2", ...],
   "alternativeOutfits": [
     {

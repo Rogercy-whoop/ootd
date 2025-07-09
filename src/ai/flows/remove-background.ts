@@ -85,7 +85,7 @@ const removeBackgroundFlow = ai.defineFlow(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          version: '1c6b0b7b5c7e4c7e8e7e7e7e7e7e7e7e7e7e7e7e7e7e7e', // carvedrock/background-removal
+          version: 'a029dff38972b5fda4ec5d75d7d1cd25aeff621d2cf4946a41055d7db66b80bc', // 851-labs/background-remover
           input: { image: imageUrl },
         }),
       });

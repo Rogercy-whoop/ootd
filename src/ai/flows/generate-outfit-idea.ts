@@ -96,22 +96,28 @@ const generateOutfitWithGemini = async (input: GenerateOutfitIdeaInput): Promise
   }
 
   // Build the prompt
-  let prompt = `You are an expert personal stylist. Generate a comprehensive outfit suggestion with weather awareness and multiple options as a JSON object.
+  let prompt = `You are an expert personal stylist. Generate a comprehensive outfit suggestion with weather awareness, professional color theory, and daily fashion trends as a JSON object.
 
 # CONTEXT
 - Weather: ${weatherData ? weatherData : 'Weather data not available'}
 ${input.occasion ? `- Occasion: ${input.occasion}` : ''}
 ${input.inspirationItems ? `- Style Inspiration: ${input.inspirationItems.map(item => item.description).join(', ')}` : ''}
 
+# COLOR THEORY
+- When selecting items, use professional color theory principles (such as complementary, analogous, or monochromatic color schemes) to create visually appealing and harmonious outfits. If possible, explain your color choices in the outfit description.
+
+# DAILY FASHION
+- Consider current daily fashion trends and modern street style when making outfit suggestions. Prioritize combinations that are both stylish and practical for everyday wear.
+
 # TASK
 Create a weather-appropriate outfit with intelligent suggestions for missing items.
 
 ${input.closetItems ? `
-## TASK: CREATE WEATHER-AWARE OUTFIT FROM CLOSET
+## TASK: CREATE WEATHER-AWARE, COLOR-COORDINATED, AND TRENDY OUTFIT FROM CLOSET
 
 ### Available Items
 ${input.closetItems.map(item => 
-  `- ID: ${item.id}, Category: ${item.category}${item.subCategory ? `, Item: ${item.subCategory}` : ''}, Tags: ${item.tags.join(', ')}`
+  `- ID: ${item.id}, Category: ${item.category}${item.subCategory ? `, Item: ${item.subCategory}` : ''}, Tags: ${item.tags.join(', ')}, Colors: ${item.dominantColors?.join(', ') || 'N/A'}`
 ).join('\n')}
 
 ### WEATHER-AWARE LOGIC:
@@ -121,7 +127,7 @@ ${input.closetItems.map(item =>
 4. Always prioritize user's existing items but be honest about what's missing
 
 ### REQUIREMENTS:
-- Your 'outfitDescription' should be 2-3 sentences explaining the choice and any weather considerations
+- Your 'outfitDescription' should be 2-3 sentences explaining the choice, any weather considerations, and the color theory or fashion trend applied
 - Your 'itemIds' array MUST contain the IDs of the chosen items from their closet
 - Your 'missingItems' array should list specific items they should add (e.g., "raincoat", "shorts", "warm jacket")
 - Your 'weatherWarnings' array should contain specific weather-related warnings (e.g., "It's raining but you don't have a raincoat - consider adding one!")
@@ -129,7 +135,7 @@ ${input.closetItems.map(item =>
 
 ` : `
 ## TASK: CREATE GENERAL OUTFIT
-Your 'outfitDescription' should be stylish, helpful, and concise (2-3 sentences).
+Your 'outfitDescription' should be stylish, helpful, and concise (2-3 sentences), and mention the color theory or fashion trend used.
 Your 'itemIds' array MUST be empty.
 Your 'missingItems' array should suggest basic wardrobe essentials.
 `}
@@ -137,7 +143,7 @@ Your 'missingItems' array should suggest basic wardrobe essentials.
 # OUTPUT FORMAT
 Return ONLY a JSON object with this exact structure:
 {
-  "outfitDescription": "2-3 sentence description with weather considerations",
+  "outfitDescription": "2-3 sentence description with weather, color theory, and fashion trend considerations",
   "itemIds": ["id1", "id2", ...],
   "missingItems": ["item1", "item2", ...],
   "weatherWarnings": ["warning1", "warning2", ...],

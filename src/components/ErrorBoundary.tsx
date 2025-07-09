@@ -90,20 +90,4 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return this.props.children;
   }
-}
-
-// Global error handler for unhandled errors
-export function setupGlobalErrorHandler() {
-  if (typeof window !== 'undefined') {
-    window.addEventListener('error', (event) => {
-      if (event.message.includes('ChunkLoadError')) {
-        console.error('ChunkLoadError detected:', event);
-        // Optionally show a toast or notification
-      }
-    });
-
-    window.addEventListener('unhandledrejection', (event) => {
-      console.error('Unhandled promise rejection:', event.reason);
-    });
-  }
 } 

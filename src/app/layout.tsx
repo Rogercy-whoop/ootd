@@ -6,7 +6,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { AuthWrapper } from '@/components/AuthWrapper';
 import { Toaster } from "@/components/ui/toaster"
 import { UIProvider } from '@/context/UIContext';
-import { ErrorBoundary, setupGlobalErrorHandler } from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: {
@@ -41,16 +41,6 @@ export default function RootLayout({
             </ClosetProvider>
           </AuthProvider>
         </ErrorBoundary>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                ${setupGlobalErrorHandler.toString()}
-                setupGlobalErrorHandler();
-              })();
-            `,
-          }}
-        />
       </body>
     </html>
   );

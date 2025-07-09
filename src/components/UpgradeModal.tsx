@@ -76,11 +76,14 @@ export function UpgradeModal() {
             </CardContent>
           </Card>
           <Card className="border-accent border-2 relative">
-            <Badge className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground font-headline">Annual Plan</Badge>
+            <Badge className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground font-headline">20% OFF</Badge>
             <CardHeader className="p-4">
               <CardTitle className="font-headline">Annual</CardTitle>
                <p className="text-2xl font-bold">$43.00<span className="text-sm font-normal text-muted-foreground">/year</span></p>
-              <CardDescription>Billed annually. Best value for regular users.</CardDescription>
+              <CardDescription>
+                <span className="line-through text-muted-foreground">$54.00</span> <span className="text-accent font-bold">$43.00</span> for your first year.<br />
+                Billed annually. Best value for regular users.
+              </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <ul className="space-y-2 text-sm text-foreground/90 mb-6">
@@ -99,7 +102,7 @@ export function UpgradeModal() {
                <p className="text-2xl font-bold">$20.00<span className="text-sm font-normal text-muted-foreground">/year</span></p>
               <CardDescription>
                 <span className="font-bold text-green-600">60% off annual plan for our first set of users!</span><br />
-                <span className="line-through text-muted-foreground">$50.00</span> <span className="text-green-600 font-bold">$20.00</span> for your first year.<br />
+                <span className="line-through text-muted-foreground">$54.00</span> <span className="text-green-600 font-bold">$20.00</span> for your first year.<br />
                 <span className="text-xs text-muted-foreground">This is a huge save for early adopters!</span>
               </CardDescription>
             </CardHeader>
@@ -109,7 +112,7 @@ export function UpgradeModal() {
                 <li className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-1" /> <span>Save Unlimited Inspirations</span></li>
               </ul>
               <Button asChild className="w-full text-lg bg-green-500 hover:bg-green-600 text-white">
-                <a href={user ? `${earlyAdopterStripeLink}?client_reference_id=${user.uid}` : earlyAdopterStripeLink} target="_blank" rel="noopener noreferrer">Choose Early Adopter</a>
+                <a href={user ? `${earlyAdopterStripeLink}?client_reference_id=${user.uid}` : earlyAdopterStripeLink} target="_blank" rel="noopener noreferrer">Early Adopter</a>
               </Button>
             </CardContent>
           </Card>

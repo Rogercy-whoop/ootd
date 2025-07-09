@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Header() {
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
   const { user, logout } = useAuth();
   const { isLoginModalOpen, setLoginModalOpen } = useUI();
 
@@ -41,26 +41,31 @@ export function Header() {
                 <Link href="/inspiration" className={cn('transition-colors hover:text-primary', pathname === '/inspiration' ? 'text-primary' : 'text-foreground/60')}>Inspiration</Link>
                 <Link href="/viewer" className={cn('transition-colors hover:text-primary', pathname === '/viewer' ? 'text-primary' : 'text-foreground/60')}>3D Viewer</Link>
                 
-                <DropdownMenu>
-                    <DropdownMenuTrigger className={cn(
-                        'flex items-center gap-1 transition-colors hover:text-primary focus:outline-none',
-                        pathname.startsWith('/debug') ? 'text-primary' : 'text-foreground/60'
-                    )}>
-                        Debug Tools
-                        <ChevronDown className="h-4 w-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem asChild>
-                            <Link href="/debug/models">AI Models</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <Link href="/debug/premium">Premium Modal</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <Link href="/debug/onboarding">Onboarding Flow</Link>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                {process.env.NODE_ENV !== 'production' && (
+                  <DropdownMenu>
+                      <DropdownMenuTrigger className={cn(
+                          'flex items-center gap-1 transition-colors hover:text-primary focus:outline-none',
+                          pathname.startsWith('/debug') ? 'text-primary' : 'text-foreground/60'
+                      )}>
+                          Debug Tools
+                          <ChevronDown className="h-4 w-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                          <DropdownMenuItem asChild>
+                              <Link href="/debug/models">AI Models</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                              <Link href="/debug/premium">Premium Modal</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                              <Link href="/debug/onboarding">Onboarding Flow</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                              <Link href="/debug/model-preview">3D Model Preview</Link>
+                          </DropdownMenuItem>
+                      </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
             </nav>
             {user ? (
                 <Button variant="ghost" size="sm" onClick={logout}>

@@ -12,6 +12,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import {GoogleGenerativeAI} from '@google/generative-ai';
 import fetch from 'node-fetch';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const RemoveBackgroundInputSchema = z.object({
   photoDataUri: z
@@ -47,19 +49,33 @@ const removeBackgroundFlow = ai.defineFlow(
       // Convert data URI to base64 (strip prefix)
       const base64 = input.photoDataUri.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
 
-      // Replicate expects a public URL, so we need to upload the image to a temporary host
-      // For now, let's use https://tmpfiles.org/api/v1/upload (free, public, for demo)
-      // In production, use your own storage (S3, Firebase Storage, etc.)
-      const uploadRes = await fetch('https://tmpfiles.org/api/v1/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/octet-stream' },
-        body: Buffer.from(base64, 'base64'),
-      });
-      const uploadJson = await uploadRes.json() as { data?: { url?: string } };
-      if (!uploadJson || !uploadJson.data || !uploadJson.data.url) {
-        throw new Error('Failed to upload image for background removal.');
+      // Upload to Firebase Storage instead of tmpfiles.org
+      let imageUrl: string;
+      
+      if (storage) {
+        try {
+          // Create a unique filename
+          const filename = `background-removal/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+          const storageRef = ref(storage, filename);
+          
+          // Convert base64 to buffer
+          const buffer = Buffer.from(base64, 'base64');
+          
+          // Upload to Firebase Storage
+          await uploadBytes(storageRef, buffer, {
+            contentType: 'image/jpeg',
+            cacheControl: 'public, max-age=3600' // Cache for 1 hour
+          });
+          
+          // Get the public URL
+          imageUrl = await getDownloadURL(storageRef);
+        } catch (firebaseError) {
+          console.error('Firebase Storage upload failed:', firebaseError);
+          throw new Error('Failed to upload image to storage for background removal.');
+        }
+      } else {
+        throw new Error('Firebase Storage is not configured.');
       }
-      const imageUrl = uploadJson.data.url;
 
       // Call Replicate API
       const response = await fetch('https://api.replicate.com/v1/predictions', {

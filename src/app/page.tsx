@@ -698,8 +698,8 @@ export default function OutfitGeneratorPage() {
           {!ignoreCloset && !closetLoading && closetItems.length > 0 && closetItems.length < 5 && (
             <Alert variant="default" className="bg-accent/10 border-accent/50">
               <AlertCircle className="h-4 w-4 text-accent/80" />
-              <AlertTitle className="text-accent-foreground/90 font-semibold">Your Closet is a Great Start!</AlertTitle>
-              <AlertDescription className="text-accent-foreground/80">
+              <AlertTitle className="text-black font-semibold">Your Closet is a Great Start!</AlertTitle>
+              <AlertDescription className="text-black">
                 For more varied and accurate suggestions, try <Link href="/closet" className="font-semibold underline">adding more items</Link> to your closet. The more we know, the better your outfits!
               </AlertDescription>
             </Alert>

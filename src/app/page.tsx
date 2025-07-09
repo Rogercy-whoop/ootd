@@ -634,7 +634,7 @@ export default function OutfitGeneratorPage() {
                   </>
                 ) : locationError ? (
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs text-destructive">{locationError}</span>
+                  <span className="text-xs text-destructive">{locationError}</span>
                     <button
                       onClick={() => setShowManualLocation(!showManualLocation)}
                       className="text-xs text-accent hover:underline"

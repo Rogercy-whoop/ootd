@@ -30,16 +30,16 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased h-full" suppressHydrationWarning>
         <ErrorBoundary>
-          <AuthProvider>
-            <ClosetProvider>
-              <UIProvider>
-                <AuthWrapper>
-                  {children}
-                </AuthWrapper>
-                <Toaster />
-              </UIProvider>
-            </ClosetProvider>
-          </AuthProvider>
+        <AuthProvider>
+          <ClosetProvider>
+            <UIProvider>
+              <AuthWrapper>
+                {children}
+              </AuthWrapper>
+              <Toaster />
+            </UIProvider>
+          </ClosetProvider>
+        </AuthProvider>
         </ErrorBoundary>
       </body>
     </html>

@@ -1,13 +1,15 @@
-import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getStorage } from "firebase-admin/storage";
+export async function getAdminStorage() {
+  const { initializeApp, cert, getApps } = await import("firebase-admin/app");
+  const { getStorage } = await import("firebase-admin/storage");
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!);
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!);
 
-if (!getApps().length) {
-  initializeApp({
-    credential: cert(serviceAccount),
-    storageBucket: "your-project-id.appspot.com", // <-- replace with your actual bucket
-  });
+  if (!getApps().length) {
+    initializeApp({
+      credential: cert(serviceAccount),
+      storageBucket: "your-project-id.appspot.com", // <-- replace with your actual bucket
+    });
+  }
+
+  return getStorage();
 }
-
-export const adminStorage = getStorage();

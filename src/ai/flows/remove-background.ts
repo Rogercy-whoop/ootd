@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import {GoogleGenerativeAI} from '@google/generative-ai';
 import fetch from 'node-fetch';
-import { adminStorage } from '@/lib/firebaseAdmin';
+import { getAdminStorage } from '@/lib/firebaseAdmin';
 
 const RemoveBackgroundInputSchema = z.object({
   photoDataUri: z
@@ -53,6 +53,7 @@ const removeBackgroundFlow = ai.defineFlow(
       try {
         // Create a unique filename
         const filename = `background-removal/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+        const adminStorage = await getAdminStorage();
         const bucket = adminStorage.bucket();
         const file = bucket.file(filename);
 

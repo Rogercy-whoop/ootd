@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { tagClothingItem } from '@/ai/flows/tag-clothing-item';
+// import { tagClothingItem } from '@/ai/flows/tag-clothing-item';
 import { removeBackground } from '@/ai/flows/remove-background';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -168,11 +168,16 @@ export default function ClosetPage() {
       const newPreview = removedBgResult.photoDataUri;
       
       setLoadingMessage('Analyzing item...');
-      const result = await tagClothingItem({ photoDataUri: newPreview });
+      // const result = await tagClothingItem({ photoDataUri: newPreview });
       
       await addClosetItem({
         photoDataUri: newPreview,
-        ...result,
+        category: 'unknown',
+        subCategory: 'unknown',
+        tags: [],
+        dominantColors: [],
+        hasPattern: false,
+        patternDescription: '',
       });
 
       cancelUpload();

@@ -55,7 +55,7 @@ const removeBackgroundFlow = ai.defineFlow(
         headers: { 'Content-Type': 'application/octet-stream' },
         body: Buffer.from(base64, 'base64'),
       });
-      const uploadJson = await uploadRes.json();
+      const uploadJson = await uploadRes.json() as { data?: { url?: string } };
       if (!uploadJson || !uploadJson.data || !uploadJson.data.url) {
         throw new Error('Failed to upload image for background removal.');
       }
@@ -69,11 +69,11 @@ const removeBackgroundFlow = ai.defineFlow(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          version: '1c6b0b7b5c7e4c7e8e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e', // carvedrock/background-removal
+          version: '1c6b0b7b5c7e4c7e8e7e7e7e7e7e7e7e7e7e7e7e7e7e7e', // carvedrock/background-removal
           input: { image: imageUrl },
         }),
       });
-      const json = await response.json();
+      const json = await response.json() as { urls?: { get?: string } };
       if (!json || !json.urls || !json.urls.get) {
         throw new Error('Failed to start background removal prediction.');
       }
@@ -85,7 +85,7 @@ const removeBackgroundFlow = ai.defineFlow(
         const pollRes = await fetch(resultUrl, {
           headers: { 'Authorization': `Token ${apiToken}` },
         });
-        const pollJson = await pollRes.json();
+        const pollJson = await pollRes.json() as { status?: string; output?: string | string[] };
         if (pollJson.status === 'succeeded' && pollJson.output) {
           outputUrl = pollJson.output;
           break;

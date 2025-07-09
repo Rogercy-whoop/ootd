@@ -49,8 +49,16 @@ const TagClothingItemOutputSchema = z.object({
 });
 export type TagClothingItemOutput = z.infer<typeof TagClothingItemOutputSchema>;
 
-export async function tagClothingItem(input: TagClothingItemInput): Promise<TagClothingItemOutput> {
-  return tagClothingItemFlow(input);
+export async function tagClothingItem({ photoDataUri }: { photoDataUri: string }): Promise<any> {
+  // TEMPORARY: Disable tagging for testing background removal
+  return {
+    category: 'unknown',
+    subCategory: 'unknown',
+    tags: [],
+    dominantColors: [],
+    hasPattern: false,
+    patternDescription: '',
+  };
 }
 
 const prompt = ai.definePrompt({

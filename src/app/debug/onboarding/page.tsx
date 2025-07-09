@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { tagClothingItem } from '@/ai/flows/tag-clothing-item';
+// import { tagClothingItem } from '@/ai/flows/tag-clothing-item';
 import { removeBackground } from '@/ai/flows/remove-background';
 import { Button } from '@/components/ui/button';
 import { useCloset } from '@/context/ClosetContext';
@@ -152,11 +152,16 @@ export default function DebugOnboardingPage() {
       const newPreview = removedBgResult.photoDataUri;
       
       setOnboardingLoadingMessage('Analyzing item...');
-      const result = await tagClothingItem({ photoDataUri: newPreview });
+      // const result = await tagClothingItem({ photoDataUri: newPreview });
       
       await addClosetItem({
         photoDataUri: newPreview,
-        ...result,
+        category: 'unknown',
+        subCategory: 'unknown',
+        tags: [],
+        dominantColors: [],
+        hasPattern: false,
+        patternDescription: '',
       });
       
       toast({

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { generateOutfitIdea, type GenerateOutfitIdeaOutput } from '@/ai/flows/generate-outfit-idea';
-import { tagClothingItem } from '@/ai/flows/tag-clothing-item';
+// import { tagClothingItem } from '@/ai/flows/tag-clothing-item';
 import { removeBackground } from '@/ai/flows/remove-background';
 import { fetchWeather } from '@/ai/tools/weather';
 import { Button } from '@/components/ui/button';
@@ -400,12 +400,16 @@ export default function OutfitGeneratorPage() {
       const newPreview = removedBgResult.photoDataUri;
       
       setOnboardingLoadingMessage('Analyzing item...');
-      const result = await tagClothingItem({ photoDataUri: newPreview });
+      // const result = await tagClothingItem({ photoDataUri: newPreview });
       
       addClosetItem({
-        id: new Date().toISOString(),
         photoDataUri: newPreview,
-        ...result,
+        category: 'unknown',
+        subCategory: 'unknown',
+        tags: [],
+        dominantColors: [],
+        hasPattern: false,
+        patternDescription: '',
       });
       
       toast({

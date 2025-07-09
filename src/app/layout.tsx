@@ -6,6 +6,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { AuthWrapper } from '@/components/AuthWrapper';
 import { Toaster } from "@/components/ui/toaster"
 import { UIProvider } from '@/context/UIContext';
+import { ErrorBoundary, setupGlobalErrorHandler } from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: {
@@ -28,16 +29,28 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased h-full" suppressHydrationWarning>
-        <AuthProvider>
-          <ClosetProvider>
-            <UIProvider>
-              <AuthWrapper>
-                {children}
-              </AuthWrapper>
-              <Toaster />
-            </UIProvider>
-          </ClosetProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <ClosetProvider>
+              <UIProvider>
+                <AuthWrapper>
+                  {children}
+                </AuthWrapper>
+                <Toaster />
+              </UIProvider>
+            </ClosetProvider>
+          </AuthProvider>
+        </ErrorBoundary>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                ${setupGlobalErrorHandler.toString()}
+                setupGlobalErrorHandler();
+              })();
+            `,
+          }}
+        />
       </body>
     </html>
   );

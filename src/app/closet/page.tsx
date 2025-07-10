@@ -13,9 +13,10 @@ import { useCloset } from '@/context/ClosetContext';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, Plus, Trash2, X, Loader2 } from 'lucide-react';
+import { Upload, Plus, Trash2, X, Loader2, Grid, List } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { OrganizedCloset } from '@/components/OrganizedCloset';
 import { cn } from '@/lib/utils';
 import { useUI } from '@/context/UIContext';
 import { useAuth } from '@/context/AuthContext';
@@ -28,6 +29,7 @@ export default function ClosetPage() {
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'organized' | 'grid'>('organized');
   const { toast } = useToast();
   const [isDraggingOver, setIsDraggingOver] = useState(false);
 
@@ -282,13 +284,40 @@ export default function ClosetPage() {
       </Card>
 
       <div>
-        <h2 className="font-headline text-3xl font-bold mb-6">Your Wardrobe</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="font-headline text-3xl font-bold">Your Wardrobe</h2>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === 'organized' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('organized')}
+              className="flex items-center gap-2"
+            >
+              <List className="w-4 h-4" />
+              Organized
+            </Button>
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="flex items-center gap-2"
+            >
+              <Grid className="w-4 h-4" />
+              Grid
+            </Button>
+          </div>
+        </div>
+        
         {closetLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
-            </div>
-        ) : closetItems.length === 0 ? (
-          <p className="text-center text-muted-foreground py-10">Your closet is empty. Add some items to get started!</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
+          </div>
+        ) : viewMode === 'organized' ? (
+          <OrganizedCloset 
+            closetItems={closetItems} 
+            onRemoveItem={removeClosetItem} 
+            loading={closetLoading}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {closetItems.map(item => (

@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!getApps().length) {
       initializeApp({
         credential: cert(serviceAccount),
-        storageBucket: 'ootd-final-b0024.appspot.com', // <-- replace with your actual bucket
+        storageBucket: 'ootd-final-b0024.firebasestorage.app', // <-- replace with your actual bucket
       });
     }
     const adminStorage = getStorage();

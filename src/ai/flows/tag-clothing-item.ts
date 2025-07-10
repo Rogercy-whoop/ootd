@@ -49,23 +49,25 @@ const TagClothingItemOutputSchema = z.object({
 export type TagClothingItemOutput = z.infer<typeof TagClothingItemOutputSchema>;
 
 export async function tagClothingItem({ photoDataUri, gender }: { photoDataUri: string; gender?: Gender }): Promise<TagClothingItemOutput> {
-  // Check if Gemini API key is available
   if (!process.env.GEMINI_API_KEY) {
     throw new Error("No Gemini API key found. Please set GEMINI_API_KEY in your .env file.");
   }
 
-  try {
-    const { GoogleGenerativeAI } = await import('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    
-    // Use gemini-1.5-flash which is better for image analysis and more cost-effective
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const maxRetries = 3;
+  const retryDelayMs = 2000;
+  let lastError: any = null;
 
-    const genderContext = gender && gender !== 'prefer-not-to-say' 
-      ? `\nUser Gender: ${gender} - Please consider ${gender}-specific clothing categories and styles.`
-      : '\nUser Gender: Not specified - Use general clothing categories.';
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const { GoogleGenerativeAI } = await import('@google/generative-ai');
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-    const prompt = `You are an expert fashion analyst specializing in clothing item classification and analysis. Analyze this clothing item image with high precision.
+      const genderContext = gender && gender !== 'prefer-not-to-say' 
+        ? `\nUser Gender: ${gender} - Please consider ${gender}-specific clothing categories and styles.`
+        : '\nUser Gender: Not specified - Use general clothing categories.';
+
+      const prompt = `You are an expert fashion analyst specializing in clothing item classification and analysis. Analyze this clothing item image with high precision.
 
 Image: [The clothing item image]${genderContext}
 
@@ -91,51 +93,52 @@ Analysis Guidelines:
 
 Return ONLY the JSON object, no other text or explanations.`;
 
-    const result = await model.generateContent([prompt, photoDataUri]);
-    const response = await result.response;
-    const text = response.text();
-    
-    console.log('Gemini API Response:', text);
-    
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.error('Failed to extract JSON from response:', text);
-      throw new Error('Failed to parse AI response as JSON');
+      const result = await model.generateContent([prompt, photoDataUri]);
+      const response = await result.response;
+      const text = response.text();
+      console.log('Gemini API Response:', text);
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.error('Failed to extract JSON from response:', text);
+        throw new Error('Failed to parse AI response as JSON');
+      }
+      let parsed;
+      try {
+        parsed = JSON.parse(jsonMatch[0]);
+      } catch (parseError) {
+        console.error('Failed to parse JSON:', jsonMatch[0], parseError);
+        throw new Error('Invalid JSON response from AI');
+      }
+      const validatedResult = {
+        category: parsed.category || 'unknown',
+        subCategory: parsed.subCategory || 'unknown',
+        tags: Array.isArray(parsed.tags) ? parsed.tags.filter((tag: any) => typeof tag === 'string') : [],
+        dominantColors: Array.isArray(parsed.dominantColors) ? parsed.dominantColors.filter((color: any) => typeof color === 'string' && color.startsWith('#')) : [],
+        hasPattern: Boolean(parsed.hasPattern),
+        patternDescription: parsed.patternDescription || ''
+      };
+      console.log('Validated tagging result:', validatedResult);
+      return validatedResult;
+    } catch (error: any) {
+      lastError = error;
+      const isRetryable = error?.message?.includes('503') || error?.message?.includes('overloaded') || error?.message?.includes('Service Unavailable');
+      console.error(`Error in tagClothingItem (attempt ${attempt}):`, error);
+      if (attempt < maxRetries && isRetryable) {
+        console.log(`Retrying Gemini tagging in ${retryDelayMs}ms... (attempt ${attempt + 1} of ${maxRetries})`);
+        await new Promise(res => setTimeout(res, retryDelayMs));
+        continue;
+      } else {
+        break;
+      }
     }
-    
-    let parsed;
-    try {
-      parsed = JSON.parse(jsonMatch[0]);
-    } catch (parseError) {
-      console.error('Failed to parse JSON:', jsonMatch[0], parseError);
-      throw new Error('Invalid JSON response from AI');
-    }
-    
-    // Validate and return the result
-    const validatedResult = {
-      category: parsed.category || 'unknown',
-      subCategory: parsed.subCategory || 'unknown',
-      tags: Array.isArray(parsed.tags) ? parsed.tags.filter((tag: any) => typeof tag === 'string') : [],
-      dominantColors: Array.isArray(parsed.dominantColors) ? parsed.dominantColors.filter((color: any) => typeof color === 'string' && color.startsWith('#')) : [],
-      hasPattern: Boolean(parsed.hasPattern),
-      patternDescription: parsed.patternDescription || ''
-    };
-    
-    console.log('Validated tagging result:', validatedResult);
-    return validatedResult;
-    
-  } catch (error) {
-    console.error('Error in tagClothingItem:', error);
-    
-    // Fallback response
-    return {
-      category: 'unknown',
-      subCategory: 'unknown',
-      tags: [],
-      dominantColors: [],
-      hasPattern: false,
-      patternDescription: ''
-    };
   }
+  // Fallback response
+  return {
+    category: 'unknown',
+    subCategory: 'unknown',
+    tags: [],
+    dominantColors: [],
+    hasPattern: false,
+    patternDescription: ''
+  };
 }

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Plus, TrendingUp, AlertCircle } from 'lucide-react';
 import type { ClothingItem } from '@/lib/types';
-import { getGenderSpecificCategories } from '@/ai/flows/tag-clothing-item';
+import { getGenderSpecificCategories } from '@/ai/flows/tag-categories';
 import type { Gender } from '@/lib/types';
 
 interface ClosetGapsProps {

@@ -65,7 +65,7 @@ export async function tagClothingItem({ photoDataUri, gender }: { photoDataUri: 
       ? `\nUser Gender: ${gender} - Please consider ${gender}-specific clothing categories and styles.`
       : '\nUser Gender: Not specified - Use general clothing categories.';
 
-    const prompt = `You are an expert fashion analyst. Analyze this clothing item image and provide detailed information.
+    const prompt = `You are an expert fashion analyst specializing in clothing item classification and analysis. Analyze this clothing item image with high precision.
 
 Image: [The clothing item image]${genderContext}
 
@@ -73,44 +73,57 @@ Please analyze the image and return a JSON object with the following structure:
 
 {
   "category": "The main category (top, bottom, shoes, accessory, outerwear)",
-  "subCategory": "Specific item type (e.g., t-shirt, jeans, sneakers, blouse)",
-  "tags": ["array", "of", "descriptive", "tags", "like", "casual", "cotton", "summer", "formal"],
+  "subCategory": "Specific item type (e.g., crew neck t-shirt, skinny jeans, running sneakers, silk blouse)",
+  "tags": ["array", "of", "descriptive", "tags", "like", "casual", "cotton", "summer", "formal", "fitted", "loose", "vintage", "modern"],
   "dominantColors": ["#HEXCODE1", "#HEXCODE2"],
   "hasPattern": true/false,
-  "patternDescription": "Description of pattern if present (e.g., 'stripes', 'floral', 'geometric')"
+  "patternDescription": "Description of pattern if present (e.g., 'stripes', 'floral', 'geometric', 'solid')"
 }
 
-Guidelines:
-- Focus only on the clothing item, ignore background
-- Use common color names and convert to hex codes
-- Be specific with subCategory (e.g., 'crew neck t-shirt' not just 't-shirt')
-- Include style, material, and occasion tags
-- If no pattern, set hasPattern to false and patternDescription to empty string
+Analysis Guidelines:
+- Focus ONLY on the clothing item, completely ignore background elements
+- Be extremely specific with subCategory (e.g., 'crew neck cotton t-shirt' not just 't-shirt')
+- Include comprehensive tags: style (casual/formal), material (cotton/denim/silk), fit (fitted/loose), season (summer/winter), occasion (work/casual/athletic)
+- Convert color names to accurate hex codes (e.g., navy blue = #000080, burgundy = #800020)
+- For patterns: be specific (e.g., 'vertical stripes', 'floral print', 'geometric pattern', 'solid color')
 - Consider gender-specific terminology and categories when applicable
+- If the image is unclear or shows multiple items, focus on the most prominent clothing item
 
-Return ONLY the JSON object, no other text.`;
+Return ONLY the JSON object, no other text or explanations.`;
 
     const result = await model.generateContent([prompt, photoDataUri]);
     const response = await result.response;
     const text = response.text();
     
+    console.log('Gemini API Response:', text);
+    
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
+      console.error('Failed to extract JSON from response:', text);
       throw new Error('Failed to parse AI response as JSON');
     }
     
-    const parsed = JSON.parse(jsonMatch[0]);
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch (parseError) {
+      console.error('Failed to parse JSON:', jsonMatch[0], parseError);
+      throw new Error('Invalid JSON response from AI');
+    }
     
     // Validate and return the result
-    return {
+    const validatedResult = {
       category: parsed.category || 'unknown',
       subCategory: parsed.subCategory || 'unknown',
-      tags: Array.isArray(parsed.tags) ? parsed.tags : [],
-      dominantColors: Array.isArray(parsed.dominantColors) ? parsed.dominantColors : [],
+      tags: Array.isArray(parsed.tags) ? parsed.tags.filter((tag: any) => typeof tag === 'string') : [],
+      dominantColors: Array.isArray(parsed.dominantColors) ? parsed.dominantColors.filter((color: any) => typeof color === 'string' && color.startsWith('#')) : [],
       hasPattern: Boolean(parsed.hasPattern),
       patternDescription: parsed.patternDescription || ''
     };
+    
+    console.log('Validated tagging result:', validatedResult);
+    return validatedResult;
     
   } catch (error) {
     console.error('Error in tagClothingItem:', error);

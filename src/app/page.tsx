@@ -622,15 +622,46 @@ export default function OutfitGeneratorPage() {
         
         {/* Testing Mode Toggle - Only visible in development */}
         {process.env.NODE_ENV === 'development' && (
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <Switch
-              id="testing-mode"
-              checked={testingMode}
-              onCheckedChange={toggleTestingMode}
-            />
-            <Label htmlFor="testing-mode" className="text-sm">
-              Testing Mode (Skip Onboarding)
-            </Label>
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="testing-mode"
+                checked={testingMode}
+                onCheckedChange={toggleTestingMode}
+              />
+              <Label htmlFor="testing-mode" className="text-sm">
+                Testing Mode (Skip Onboarding)
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm">Quick Gender Toggle:</Label>
+              <div className="flex gap-1">
+                <Button
+                  variant={preferences.gender === 'male' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateGender('male')}
+                  className="text-xs"
+                >
+                  Male
+                </Button>
+                <Button
+                  variant={preferences.gender === 'female' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateGender('female')}
+                  className="text-xs"
+                >
+                  Female
+                </Button>
+                <Button
+                  variant={preferences.gender === 'non-binary' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateGender('non-binary')}
+                  className="text-xs"
+                >
+                  NB
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>

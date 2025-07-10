@@ -13,10 +13,11 @@ import { useCloset } from '@/context/ClosetContext';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, Plus, Trash2, X, Loader2, Grid, List } from 'lucide-react';
+import { Upload, Plus, Trash2, X, Loader2, Grid, List, BarChart3 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { OrganizedCloset } from '@/components/OrganizedCloset';
+import { ClosetGaps } from '@/components/ClosetGaps';
 import { cn } from '@/lib/utils';
 import { useUI } from '@/context/UIContext';
 import { useUserPreferences } from '@/context/UserPreferencesContext';
@@ -31,7 +32,7 @@ export default function ClosetPage() {
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'organized' | 'grid'>('organized');
+  const [viewMode, setViewMode] = useState<'organized' | 'grid' | 'gaps'>('organized');
   const { toast } = useToast();
   const [isDraggingOver, setIsDraggingOver] = useState(false);
 
@@ -222,7 +223,7 @@ export default function ClosetPage() {
         </p>
       </div>
 
-      <Card className="mb-8 shadow-lg">
+      <Card className="mb-8 shadow-lg" id="upload-section">
         <CardHeader>
           <CardTitle className="font-headline text-2xl flex items-center gap-2">
             <Plus className="w-6 h-6 text-accent" /> Add New Item
@@ -307,6 +308,15 @@ export default function ClosetPage() {
               <Grid className="w-4 h-4" />
               Grid
             </Button>
+            <Button
+              variant={viewMode === 'gaps' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('gaps')}
+              className="flex items-center gap-2"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Analysis
+            </Button>
           </div>
         </div>
         
@@ -320,6 +330,12 @@ export default function ClosetPage() {
             onRemoveItem={removeClosetItem} 
             loading={closetLoading}
             gender={preferences.gender}
+          />
+        ) : viewMode === 'gaps' ? (
+          <ClosetGaps 
+            closetItems={closetItems}
+            gender={preferences.gender}
+            onAddItem={() => document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' })}
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

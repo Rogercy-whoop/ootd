@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ClothingItem } from '@/lib/types';
-import { CLOTHING_CATEGORIES } from '@/ai/flows/tag-clothing-item';
+import { getGenderSpecificCategories } from '@/ai/flows/tag-clothing-item';
+import type { Gender } from '@/lib/types';
 
 interface OrganizedClosetProps {
   closetItems: ClothingItem[];
   onRemoveItem: (id: string) => void;
   loading?: boolean;
+  gender?: Gender;
 }
 
 interface CategorySection {
@@ -24,7 +26,7 @@ interface CategorySection {
   }[];
 }
 
-export function OrganizedCloset({ closetItems, onRemoveItem, loading = false }: OrganizedClosetProps) {
+export function OrganizedCloset({ closetItems, onRemoveItem, loading = false, gender }: OrganizedClosetProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['tops', 'bottoms', 'shoes']));
 
   const toggleCategory = (category: string) => {
@@ -38,6 +40,7 @@ export function OrganizedCloset({ closetItems, onRemoveItem, loading = false }: 
   };
 
   const organizeItems = (items: ClothingItem[]): CategorySection[] => {
+    const categories = getGenderSpecificCategories(gender);
     const organized: { [key: string]: { [subKey: string]: ClothingItem[] } } = {
       tops: {},
       bottoms: {},
@@ -54,15 +57,15 @@ export function OrganizedCloset({ closetItems, onRemoveItem, loading = false }: 
       // Determine which main category this item belongs to
       let mainCategory = 'other';
       
-      if (CLOTHING_CATEGORIES.tops.some(sub => subCategory.includes(sub) || category.includes('top'))) {
+      if (categories.tops.some((sub: string) => subCategory.includes(sub) || category.includes('top'))) {
         mainCategory = 'tops';
-      } else if (CLOTHING_CATEGORIES.bottoms.some(sub => subCategory.includes(sub) || category.includes('bottom'))) {
+      } else if (categories.bottoms.some((sub: string) => subCategory.includes(sub) || category.includes('bottom'))) {
         mainCategory = 'bottoms';
-      } else if (CLOTHING_CATEGORIES.shoes.some(sub => subCategory.includes(sub) || category.includes('shoe'))) {
+      } else if (categories.shoes.some((sub: string) => subCategory.includes(sub) || category.includes('shoe'))) {
         mainCategory = 'shoes';
-      } else if (CLOTHING_CATEGORIES.accessories.some(sub => subCategory.includes(sub) || category.includes('accessory'))) {
+      } else if (categories.accessories.some((sub: string) => subCategory.includes(sub) || category.includes('accessory'))) {
         mainCategory = 'accessories';
-      } else if (CLOTHING_CATEGORIES.outerwear.some(sub => subCategory.includes(sub) || category.includes('outerwear'))) {
+      } else if (categories.outerwear.some((sub: string) => subCategory.includes(sub) || category.includes('outerwear'))) {
         mainCategory = 'outerwear';
       }
 

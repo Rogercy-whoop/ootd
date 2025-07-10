@@ -19,12 +19,14 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { OrganizedCloset } from '@/components/OrganizedCloset';
 import { cn } from '@/lib/utils';
 import { useUI } from '@/context/UIContext';
+import { useUserPreferences } from '@/context/UserPreferencesContext';
 import { useAuth } from '@/context/AuthContext';
 
 export default function ClosetPage() {
   const { closetItems, addClosetItem, removeClosetItem, loading: closetLoading } = useCloset();
   const { user } = useAuth();
   const { setUpgradeModalOpen, setLoginModalOpen } = useUI();
+  const { preferences } = useUserPreferences();
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
@@ -171,7 +173,7 @@ export default function ClosetPage() {
       const newPreview = removedBgResult.photoDataUri;
       
       setLoadingMessage('Analyzing item...');
-      const result = await tagClothingItem({ photoDataUri: newPreview });
+      const result = await tagClothingItem({ photoDataUri: newPreview, gender: preferences.gender });
       
       await addClosetItem({
         photoDataUri: newPreview,
@@ -317,6 +319,7 @@ export default function ClosetPage() {
             closetItems={closetItems} 
             onRemoveItem={removeClosetItem} 
             loading={closetLoading}
+            gender={preferences.gender}
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

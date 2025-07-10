@@ -5,6 +5,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { tagClothingItem } from '@/ai/flows/tag-clothing-item';
+import { useUserPreferences } from '@/context/UserPreferencesContext';
 import { removeBackground } from '@/ai/flows/remove-background';
 import { Button } from '@/components/ui/button';
 import { useCloset } from '@/context/ClosetContext';
@@ -27,6 +28,7 @@ const onboardingPrompts = [
 
 export default function DebugOnboardingPage() {
   const { addClosetItem } = useCloset();
+  const { preferences } = useUserPreferences();
   const { toast } = useToast();
 
   // Onboarding state
@@ -152,7 +154,7 @@ export default function DebugOnboardingPage() {
       const newPreview = removedBgResult.photoDataUri;
       
       setOnboardingLoadingMessage('Analyzing item...');
-      const result = await tagClothingItem({ photoDataUri: newPreview });
+      const result = await tagClothingItem({ photoDataUri: newPreview, gender: preferences.gender });
       
       await addClosetItem({
         photoDataUri: newPreview,

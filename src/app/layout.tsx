@@ -6,6 +6,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { AuthWrapper } from '@/components/AuthWrapper';
 import { Toaster } from "@/components/ui/toaster"
 import { UIProvider } from '@/context/UIContext';
+import { UserPreferencesProvider } from '@/context/UserPreferencesContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
@@ -31,14 +32,16 @@ export default function RootLayout({
       <body className="font-body antialiased h-full" suppressHydrationWarning>
         <ErrorBoundary>
         <AuthProvider>
-          <ClosetProvider>
-            <UIProvider>
-              <AuthWrapper>
-                {children}
-              </AuthWrapper>
-              <Toaster />
-            </UIProvider>
-          </ClosetProvider>
+          <UserPreferencesProvider>
+            <ClosetProvider>
+              <UIProvider>
+                <AuthWrapper>
+                  {children}
+                </AuthWrapper>
+                <Toaster />
+              </UIProvider>
+            </ClosetProvider>
+          </UserPreferencesProvider>
         </AuthProvider>
         </ErrorBoundary>
       </body>

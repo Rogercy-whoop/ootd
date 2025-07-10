@@ -6,6 +6,7 @@
  */
 
 import {z} from 'zod';
+import type { Gender } from '@/lib/types';
 
 const TagClothingItemInputSchema = z.object({
   photoDataUri: z
@@ -13,6 +14,7 @@ const TagClothingItemInputSchema = z.object({
     .describe(
       "A photo of a clothing item, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
+  gender: z.enum(['male', 'female', 'non-binary', 'prefer-not-to-say']).optional().describe('User gender for better categorization'),
 });
 export type TagClothingItemInput = z.infer<typeof TagClothingItemInputSchema>;
 
@@ -45,29 +47,68 @@ const TagClothingItemOutputSchema = z.object({
 });
 export type TagClothingItemOutput = z.infer<typeof TagClothingItemOutputSchema>;
 
-// Clothing categories for better organization
+// Gender-specific clothing categories for better organization
 export const CLOTHING_CATEGORIES = {
-  tops: [
-    't-shirt', 'polo shirt', 'dress shirt', 'blouse', 'sweater', 'hoodie', 
-    'cardigan', 'tank top', 'crop top', 'turtleneck', 'blazer', 'jacket'
-  ],
-  bottoms: [
-    'jeans', 'pants', 'shorts', 'skirt', 'dress pants', 'leggings', 
-    'chinos', 'khakis', 'joggers', 'sweatpants'
-  ],
-  shoes: [
-    'sneakers', 'boots', 'sandals', 'flats', 'heels', 'loafers', 
-    'oxfords', 'mules', 'slides', 'athletic shoes'
-  ],
-  accessories: [
-    'hat', 'scarf', 'belt', 'bag', 'jewelry', 'watch', 'sunglasses'
-  ],
-  outerwear: [
-    'coat', 'jacket', 'blazer', 'vest', 'raincoat', 'winter coat'
-  ]
+  male: {
+    tops: [
+      't-shirt', 'polo shirt', 'dress shirt', 'button-down shirt', 'sweater', 'hoodie', 
+      'cardigan', 'tank top', 'turtleneck', 'blazer', 'jacket', 'sweatshirt'
+    ],
+    bottoms: [
+      'jeans', 'pants', 'shorts', 'dress pants', 'chinos', 'khakis', 'joggers', 
+      'sweatpants', 'cargo pants', 'slacks', 'trousers'
+    ],
+    shoes: [
+      'sneakers', 'boots', 'dress shoes', 'loafers', 'oxfords', 'athletic shoes', 
+      'sandals', 'slides', 'mules', 'chelsea boots'
+    ],
+    accessories: [
+      'hat', 'scarf', 'belt', 'bag', 'jewelry', 'watch', 'sunglasses', 'tie', 'bow tie'
+    ],
+    outerwear: [
+      'coat', 'jacket', 'blazer', 'vest', 'raincoat', 'winter coat', 'leather jacket'
+    ]
+  },
+  female: {
+    tops: [
+      't-shirt', 'blouse', 'sweater', 'cardigan', 'tank top', 'crop top', 'turtleneck', 
+      'dress shirt', 'polo shirt', 'hoodie', 'sweatshirt', 'bodysuit'
+    ],
+    bottoms: [
+      'jeans', 'pants', 'shorts', 'skirt', 'dress pants', 'leggings', 'joggers', 
+      'sweatpants', 'culottes', 'palazzo pants', 'skinny jeans'
+    ],
+    shoes: [
+      'sneakers', 'boots', 'sandals', 'flats', 'heels', 'loafers', 'mules', 
+      'slides', 'pumps', 'ankle boots', 'athletic shoes'
+    ],
+    accessories: [
+      'hat', 'scarf', 'belt', 'bag', 'jewelry', 'watch', 'sunglasses', 'hair accessories'
+    ],
+    outerwear: [
+      'coat', 'jacket', 'blazer', 'vest', 'raincoat', 'winter coat', 'leather jacket'
+    ]
+  },
+  unisex: {
+    tops: [
+      't-shirt', 'sweater', 'hoodie', 'cardigan', 'tank top', 'sweatshirt'
+    ],
+    bottoms: [
+      'jeans', 'pants', 'shorts', 'joggers', 'sweatpants'
+    ],
+    shoes: [
+      'sneakers', 'boots', 'sandals', 'slides', 'athletic shoes'
+    ],
+    accessories: [
+      'hat', 'scarf', 'belt', 'bag', 'jewelry', 'watch', 'sunglasses'
+    ],
+    outerwear: [
+      'coat', 'jacket', 'vest', 'raincoat', 'winter coat'
+    ]
+  }
 };
 
-export async function tagClothingItem({ photoDataUri }: { photoDataUri: string }): Promise<TagClothingItemOutput> {
+export async function tagClothingItem({ photoDataUri, gender }: { photoDataUri: string; gender?: Gender }): Promise<TagClothingItemOutput> {
   // Check if Gemini API key is available
   if (!process.env.GEMINI_API_KEY) {
     throw new Error("No Gemini API key found. Please set GEMINI_API_KEY in your .env file.");
@@ -80,9 +121,13 @@ export async function tagClothingItem({ photoDataUri }: { photoDataUri: string }
     // Use gemini-1.5-flash which is better for image analysis and more cost-effective
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
+    const genderContext = gender && gender !== 'prefer-not-to-say' 
+      ? `\nUser Gender: ${gender} - Please consider ${gender}-specific clothing categories and styles.`
+      : '\nUser Gender: Not specified - Use general clothing categories.';
+
     const prompt = `You are an expert fashion analyst. Analyze this clothing item image and provide detailed information.
 
-Image: [The clothing item image]
+Image: [The clothing item image]${genderContext}
 
 Please analyze the image and return a JSON object with the following structure:
 
@@ -101,6 +146,7 @@ Guidelines:
 - Be specific with subCategory (e.g., 'crew neck t-shirt' not just 't-shirt')
 - Include style, material, and occasion tags
 - If no pattern, set hasPattern to false and patternDescription to empty string
+- Consider gender-specific terminology and categories when applicable
 
 Return ONLY the JSON object, no other text.`;
 
@@ -139,4 +185,12 @@ Return ONLY the JSON object, no other text.`;
       patternDescription: ''
     };
   }
+}
+
+// Helper function to get gender-specific categories
+export function getGenderSpecificCategories(gender?: Gender) {
+  if (!gender || gender === 'prefer-not-to-say' || gender === 'non-binary') {
+    return CLOTHING_CATEGORIES.unisex;
+  }
+  return CLOTHING_CATEGORIES[gender] || CLOTHING_CATEGORIES.unisex;
 }

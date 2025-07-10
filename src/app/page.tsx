@@ -23,6 +23,8 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useUI } from '@/context/UIContext';
+import { useUserPreferences } from '@/context/UserPreferencesContext';
+import { GenderSelection } from '@/components/GenderSelection';
 
 const onboardingPrompts = [
   {}, // 0: welcome
@@ -55,12 +57,15 @@ export default function OutfitGeneratorPage() {
 
   // Onboarding state
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [onboardingStep, setOnboardingStep] = useState(0); // 0:welcome, 1-5:uploads, 6:done
+  const [onboardingStep, setOnboardingStep] = useState(0); // 0:welcome, 1:gender, 2-6:uploads, 7:done
   const [onboardingPreview, setOnboardingPreview] = useState<string | null>(null);
   const [onboardingLoading, setOnboardingLoading] = useState(false);
   const [onboardingLoadingMessage, setOnboardingLoadingMessage] = useState<string | null>(null);
   const [onboardingError, setOnboardingError] = useState<string | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  
+  // User preferences
+  const { preferences, updateGender } = useUserPreferences();
 
   // Daily Login Prompt state
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -400,7 +405,7 @@ export default function OutfitGeneratorPage() {
       const newPreview = removedBgResult.photoDataUri;
       
       setOnboardingLoadingMessage('Analyzing item...');
-      const result = await tagClothingItem({ photoDataUri: newPreview });
+      const result = await tagClothingItem({ photoDataUri: newPreview, gender: preferences.gender });
       
       addClosetItem({
         photoDataUri: newPreview,
@@ -464,14 +469,44 @@ export default function OutfitGeneratorPage() {
             </>
           )}
 
-          {(onboardingStep >= 1 && onboardingStep <= 5) && (
+          {onboardingStep === 1 && (
             <>
               <DialogHeader>
                 <DialogTitle className="text-2xl font-headline">
-                  {onboardingPrompts[onboardingStep].title}
+                  Personalize Your Experience
                 </DialogTitle>
                 <DialogDescription>
-                  {onboardingPrompts[onboardingStep].description}
+                  Help us provide better clothing suggestions and organize your closet more effectively.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="py-4">
+                <GenderSelection 
+                  onGenderSelect={updateGender}
+                  selectedGender={preferences.gender}
+                />
+              </div>
+              
+              <DialogFooter>
+                <Button 
+                  onClick={() => setOnboardingStep(2)} 
+                  className="w-full text-lg"
+                  disabled={!preferences.gender}
+                >
+                  Continue
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {(onboardingStep >= 2 && onboardingStep <= 6) && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-headline">
+                  {onboardingPrompts[onboardingStep - 1].title}
+                </DialogTitle>
+                <DialogDescription>
+                  {onboardingPrompts[onboardingStep - 1].description}
                 </DialogDescription>
               </DialogHeader>
 
@@ -523,13 +558,13 @@ export default function OutfitGeneratorPage() {
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       {onboardingLoadingMessage || 'Processing...'}
                     </>
-                  ) : `Add Item (${onboardingStep}/5)`}
+                  ) : `Add Item (${onboardingStep - 1}/5)`}
                 </Button>
               </DialogFooter>
             </>
           )}
 
-          {onboardingStep === 6 && (
+          {onboardingStep === 7 && (
              <>
               <DialogHeader>
                 <DialogTitle className="text-2xl font-headline">All Set!</DialogTitle>

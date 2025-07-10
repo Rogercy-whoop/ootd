@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ClothingItem } from '@/lib/types';
-import { getGenderSpecificCategories } from '@/ai/flows/tag-clothing-item';
+import { getGenderSpecificCategories } from '@/ai/flows/tag-categories';
 import type { Gender } from '@/lib/types';
 
 interface OrganizedClosetProps {

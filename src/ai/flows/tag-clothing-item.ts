@@ -1,14 +1,10 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for tagging clothing items uploaded by the user.
- *
- * - tagClothingItem - A function that takes a clothing item image and returns rich tags for it.
- * - TagClothingItemInput - The input type for the tagClothingItem function.
- * - TagClothingItemOutput - The return type for the tagClothingItem function.
+ * @fileOverview This file defines a flow for tagging clothing items uploaded by the user.
+ * Uses Google Generative AI directly for better image processing capabilities.
  */
 
-import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
 const TagClothingItemInputSchema = z.object({
@@ -49,54 +45,98 @@ const TagClothingItemOutputSchema = z.object({
 });
 export type TagClothingItemOutput = z.infer<typeof TagClothingItemOutputSchema>;
 
-export async function tagClothingItem({ photoDataUri }: { photoDataUri: string }): Promise<any> {
-  // TEMPORARY: Disable tagging for testing background removal
-  return {
-    category: 'unknown',
-    subCategory: 'unknown',
-    tags: [],
-    dominantColors: [],
-    hasPattern: false,
-    patternDescription: '',
-  };
+// Clothing categories for better organization
+export const CLOTHING_CATEGORIES = {
+  tops: [
+    't-shirt', 'polo shirt', 'dress shirt', 'blouse', 'sweater', 'hoodie', 
+    'cardigan', 'tank top', 'crop top', 'turtleneck', 'blazer', 'jacket'
+  ],
+  bottoms: [
+    'jeans', 'pants', 'shorts', 'skirt', 'dress pants', 'leggings', 
+    'chinos', 'khakis', 'joggers', 'sweatpants'
+  ],
+  shoes: [
+    'sneakers', 'boots', 'sandals', 'flats', 'heels', 'loafers', 
+    'oxfords', 'mules', 'slides', 'athletic shoes'
+  ],
+  accessories: [
+    'hat', 'scarf', 'belt', 'bag', 'jewelry', 'watch', 'sunglasses'
+  ],
+  outerwear: [
+    'coat', 'jacket', 'blazer', 'vest', 'raincoat', 'winter coat'
+  ]
+};
+
+export async function tagClothingItem({ photoDataUri }: { photoDataUri: string }): Promise<TagClothingItemOutput> {
+  // Check if Gemini API key is available
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("No Gemini API key found. Please set GEMINI_API_KEY in your .env file.");
+  }
+
+  try {
+    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    
+    // Use gemini-1.5-flash which is better for image analysis and more cost-effective
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const prompt = `You are an expert fashion analyst. Analyze this clothing item image and provide detailed information.
+
+Image: [The clothing item image]
+
+Please analyze the image and return a JSON object with the following structure:
+
+{
+  "category": "The main category (top, bottom, shoes, accessory, outerwear)",
+  "subCategory": "Specific item type (e.g., t-shirt, jeans, sneakers, blouse)",
+  "tags": ["array", "of", "descriptive", "tags", "like", "casual", "cotton", "summer", "formal"],
+  "dominantColors": ["#HEXCODE1", "#HEXCODE2"],
+  "hasPattern": true/false,
+  "patternDescription": "Description of pattern if present (e.g., 'stripes', 'floral', 'geometric')"
 }
 
-const prompt = ai.definePrompt({
-  name: 'tagClothingItemPrompt',
-  model: 'gemini-1.5-pro',
-  input: {schema: TagClothingItemInputSchema},
-  output: {schema: TagClothingItemOutputSchema},
-  prompt: `You are an AI assistant specialized in analyzing and tagging clothing items from images.
-  Your task is to analyze the provided image, focusing only on the primary clothing item and ignoring the background or any other objects.
+Guidelines:
+- Focus only on the clothing item, ignore background
+- Use common color names and convert to hex codes
+- Be specific with subCategory (e.g., 'crew neck t-shirt' not just 't-shirt')
+- Include style, material, and occasion tags
+- If no pattern, set hasPattern to false and patternDescription to empty string
 
-  Image: {{media url=photoDataUri}}
+Return ONLY the JSON object, no other text.`;
 
-  From the image, extract the following information:
-  1.  **category**: The general category (e.g., top, bottom, shoes, accessory).
-  2.  **subCategory**: A more specific category (e.g., t-shirt, jeans, sneaker, handbag).
-  3.  **tags**: Relevant descriptive tags about the item's style, material, or suitable occasion (e.g., 'casual', 'cotton', 'summer', 'formal wear').
-  4.  **dominantColors**: An array of the main colors present in the item, as hex codes.
-  5.  **hasPattern**: A boolean indicating if the item has a repeating pattern.
-  6.  **patternDescription**: If 'hasPattern' is true, describe the pattern (e.g., 'horizontal stripes', 'floral print').
-  
-  Please provide the output in the specified JSON format.`,
-});
-
-const tagClothingItemFlow = ai.defineFlow(
-  {
-    name: 'tagClothingItemFlow',
-    inputSchema: TagClothingItemInputSchema,
-    outputSchema: TagClothingItemOutputSchema,
-  },
-  async input => {
-    const response = await prompt(input);
-    const output = response.output;
-
-    if (!output) {
-      console.error('AI tag response did not conform to schema. Full response:', JSON.stringify(response, null, 2));
-      throw new Error("The AI failed to generate valid tags. Its response was not in the expected JSON format.");
+    const result = await model.generateContent([prompt, photoDataUri]);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Failed to parse AI response as JSON');
     }
-
-    return output;
+    
+    const parsed = JSON.parse(jsonMatch[0]);
+    
+    // Validate and return the result
+    return {
+      category: parsed.category || 'unknown',
+      subCategory: parsed.subCategory || 'unknown',
+      tags: Array.isArray(parsed.tags) ? parsed.tags : [],
+      dominantColors: Array.isArray(parsed.dominantColors) ? parsed.dominantColors : [],
+      hasPattern: Boolean(parsed.hasPattern),
+      patternDescription: parsed.patternDescription || ''
+    };
+    
+  } catch (error) {
+    console.error('Error in tagClothingItem:', error);
+    
+    // Fallback response
+    return {
+      category: 'unknown',
+      subCategory: 'unknown',
+      tags: [],
+      dominantColors: [],
+      hasPattern: false,
+      patternDescription: ''
+    };
   }
-);
+}

@@ -1,14 +1,11 @@
 
 'use server';
 /**
- * @fileOverview Defines a Genkit tool for fetching the current weather.
+ * @fileOverview Weather lookups for outfit suggestions, using the free Open-Meteo API.
  *
- * - getCurrentWeather - A tool that retrieves weather data from a public API.
- * - fetchWeather - The underlying function to retrieve weather data.
+ * - fetchWeather - Current conditions for a latitude/longitude.
+ * - geocodeCity - Coordinates for a city name typed in by the user.
  */
-
-import { ai } from '@/ai/genkit';
-import { z } from 'zod';
 
 // WMO Weather interpretation codes for open-meteo API
 const weatherCodes: { [key: number]: string } = {
@@ -69,15 +66,18 @@ export async function fetchWeather({ latitude, longitude }: { latitude: number; 
     }
 }
 
-export const getCurrentWeather = ai.defineTool(
-  {
-    name: 'getCurrentWeather',
-    description: "Gets the current weather for a given location using its latitude and longitude. This should be called for every request to get the most up-to-date weather.",
-    inputSchema: z.object({
-      latitude: z.number().describe('The latitude of the location.'),
-      longitude: z.number().describe('The longitude of the location.'),
-    }),
-    outputSchema: z.string().describe('A description of the current weather conditions, including temperature in Fahrenheit and Celsius.'),
-  },
-  async (input) => fetchWeather(input)
-);
+// Turns a city name into coordinates with Open-Meteo's free geocoding API (no key needed).
+export async function geocodeCity(name: string): Promise<{ latitude: number; longitude: number } | null> {
+  try {
+    const response = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1`
+    );
+    if (!response.ok) return null;
+    const data = await response.json();
+    const place = data.results?.[0];
+    return place ? { latitude: place.latitude, longitude: place.longitude } : null;
+  } catch (error) {
+    console.error('Error geocoding city:', error);
+    return null;
+  }
+}

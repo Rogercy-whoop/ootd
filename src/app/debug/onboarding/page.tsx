@@ -155,7 +155,11 @@ export default function DebugOnboardingPage() {
       
       setOnboardingLoadingMessage('Analyzing item...');
       const result = await tagClothingItem({ photoDataUri: newPreview, gender: preferences.gender });
-      
+      if ('error' in result) {
+        setOnboardingError(result.error);
+        return;
+      }
+
       await addClosetItem({
         photoDataUri: newPreview,
         category: result.category,

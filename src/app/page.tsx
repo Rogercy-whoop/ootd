@@ -6,13 +6,13 @@ import Link from 'next/link';
 import { generateOutfitIdea, type GenerateOutfitIdeaOutput } from '@/ai/flows/generate-outfit-idea';
 import { tagClothingItem } from '@/ai/flows/tag-clothing-item';
 import { removeBackground } from '@/ai/flows/remove-background';
-import { fetchWeather } from '@/ai/tools/weather';
+import { fetchWeather, geocodeCity } from '@/ai/tools/weather';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useCloset } from '@/context/ClosetContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Lightbulb, Zap, Heart, AlertCircle, RefreshCw, Upload, X, PartyPopper, Loader2, Info, Sun, Cloud, Snowflake, Eye } from 'lucide-react';
+import { Lightbulb, Zap, Heart, AlertCircle, RefreshCw, Upload, X, PartyPopper, Loader2, Info, Sun, Cloud, Snowflake } from 'lucide-react';
 import type { ClothingItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { isLoginEnabled } from '@/lib/firebase';
 import { useUI } from '@/context/UIContext';
 import { useUserPreferences } from '@/context/UserPreferencesContext';
 import { GenderSelection } from '@/components/GenderSelection';
@@ -136,8 +137,8 @@ export default function OutfitGeneratorPage() {
   
   // "Once a day" prompt to encourage signup for guest users.
   useEffect(() => {
-    if (authLoading) return; // Wait until auth state is determined
-    
+    if (authLoading || !isLoginEnabled) return; // Wait until auth state is determined; no prompt without accounts
+
     if (!user) { // Only show prompt if user is a guest
       const lastPrompted = localStorage.getItem('lastLoginPromptTimestamp');
       const now = new Date().getTime();
@@ -187,10 +188,13 @@ export default function OutfitGeneratorPage() {
         closetItems: sanitizedClosetItems,
         inspirationItems: sanitizedInspirationItems,
       });
-      setOutfitIdea(result);
+      if ('error' in result) {
+        setError(result.error);
+      } else {
+        setOutfitIdea(result);
+      }
     } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
-      setError(`Failed to generate an outfit idea. Please try again. ${errorMessage}`);
+      setError('Could not reach the server. Please check your connection and try again.');
       console.error(e);
     } finally {
       setLoading(false);
@@ -252,13 +256,10 @@ export default function OutfitGeneratorPage() {
     if (!manualLocation.trim()) return;
     
     try {
-      // Use a geocoding service to convert city name to coordinates
-      const response = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(manualLocation)}&limit=1&appid=YOUR_API_KEY`);
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        const { lat, lon } = data[0];
-        setLocation({ latitude: lat, longitude: lon });
+      const coords = await geocodeCity(manualLocation.trim());
+
+      if (coords) {
+        setLocation(coords);
         setLocationError(null);
         setShowManualLocation(false);
         setManualLocation('');
@@ -400,13 +401,17 @@ export default function OutfitGeneratorPage() {
     setOnboardingLoading(true);
 
     try {
-      setOnboardingLoadingMessage('Removing background...');
+      setOnboardingLoadingMessage('Processing image...');
       const removedBgResult = await removeBackground({ photoDataUri: onboardingPreview });
       const newPreview = removedBgResult.photoDataUri;
-      
+
       setOnboardingLoadingMessage('Analyzing item...');
       const result = await tagClothingItem({ photoDataUri: newPreview, gender: preferences.gender });
-      
+      if ('error' in result) {
+        setOnboardingError(result.error);
+        return;
+      }
+
       addClosetItem({
         photoDataUri: newPreview,
         category: result.category,
@@ -843,19 +848,6 @@ export default function OutfitGeneratorPage() {
                                 </TooltipContent>
                             </Tooltip>
 
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" asChild className="text-accent hover:text-primary">
-                                        <Link href="/viewer">
-                                            <Eye className="w-5 h-5" />
-                                            <span className="sr-only">View in 3D</span>
-                                        </Link>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>View in 3D</p>
-                                </TooltipContent>
-                            </Tooltip>
                         </div>
                     </TooltipProvider>
                 </div>

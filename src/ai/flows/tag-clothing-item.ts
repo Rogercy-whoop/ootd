@@ -7,7 +7,7 @@
 
 import {z} from 'zod';
 import type { Gender } from '@/lib/types';
-import { getGenderSpecificCategories, CLOTHING_CATEGORIES } from './tag-categories';
+import { getGeminiModel, imagePartFromDataUri, parseJsonReply, friendlyAiError } from '@/ai/gemini';
 
 const TagClothingItemInputSchema = z.object({
   photoDataUri: z
@@ -48,9 +48,15 @@ const TagClothingItemOutputSchema = z.object({
 });
 export type TagClothingItemOutput = z.infer<typeof TagClothingItemOutputSchema>;
 
-export async function tagClothingItem({ photoDataUri, gender }: { photoDataUri: string; gender?: Gender }): Promise<TagClothingItemOutput> {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("No Gemini API key found. Please set GEMINI_API_KEY in your .env file.");
+// The browser shrinks photos to 1024px before upload, which is well under this.
+const MAX_IMAGE_DATA_URI_LENGTH = 2_000_000; // ~1.5 MB image
+
+export async function tagClothingItem({ photoDataUri, gender }: { photoDataUri: string; gender?: Gender }): Promise<TagClothingItemOutput | { error: string }> {
+  if (!/^data:image\/(png|jpeg|webp);base64,/.test(photoDataUri)) {
+    return { error: 'Please upload a PNG, JPG, or WEBP image.' };
+  }
+  if (photoDataUri.length > MAX_IMAGE_DATA_URI_LENGTH) {
+    return { error: 'That image is too large. Please try a smaller photo.' };
   }
 
   const maxRetries = 3;
@@ -59,9 +65,7 @@ export async function tagClothingItem({ photoDataUri, gender }: { photoDataUri: 
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = getGeminiModel();
 
       const genderContext = gender && gender !== 'prefer-not-to-say' 
         ? `\nUser Gender: ${gender} - Please consider ${gender}-specific clothing categories and styles.`
@@ -93,22 +97,8 @@ Analysis Guidelines:
 
 Return ONLY the JSON object, no other text or explanations.`;
 
-      const result = await model.generateContent([prompt, photoDataUri]);
-      const response = await result.response;
-      const text = response.text();
-      console.log('Gemini API Response:', text);
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error('Failed to extract JSON from response:', text);
-        throw new Error('Failed to parse AI response as JSON');
-      }
-      let parsed;
-      try {
-        parsed = JSON.parse(jsonMatch[0]);
-      } catch (parseError) {
-        console.error('Failed to parse JSON:', jsonMatch[0], parseError);
-        throw new Error('Invalid JSON response from AI');
-      }
+      const result = await model.generateContent([prompt, imagePartFromDataUri(photoDataUri)]);
+      const parsed = parseJsonReply(result.response.text());
       const validatedResult = {
         category: parsed.category || 'unknown',
         subCategory: parsed.subCategory || 'unknown',
@@ -117,7 +107,6 @@ Return ONLY the JSON object, no other text or explanations.`;
         hasPattern: Boolean(parsed.hasPattern),
         patternDescription: parsed.patternDescription || ''
       };
-      console.log('Validated tagging result:', validatedResult);
       return validatedResult;
     } catch (error: any) {
       lastError = error;
@@ -132,13 +121,6 @@ Return ONLY the JSON object, no other text or explanations.`;
       }
     }
   }
-  // Fallback response
-  return {
-    category: 'unknown',
-    subCategory: 'unknown',
-    tags: [],
-    dominantColors: [],
-    hasPattern: false,
-    patternDescription: ''
-  };
+  // Report the failure instead of saving an "unknown" item to the closet.
+  return { error: friendlyAiError(lastError) };
 }

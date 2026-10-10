@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { User, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { auth, isFirebaseConfigured } from '@/lib/firebase';
+import { auth, isFirebaseConfigured, isLoginEnabled } from '@/lib/firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isFirebaseConfigured || !auth) {
+    if (!isLoginEnabled || !auth) {
       setLoading(false);
       return;
     }
@@ -112,7 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  if (!isFirebaseConfigured) {
+  // Only a problem when accounts were switched on but the Firebase settings are missing.
+  if (process.env.NEXT_PUBLIC_ENABLE_LOGIN === 'true' && !isFirebaseConfigured) {
     return <UnconfiguredFirebase />;
   }
 

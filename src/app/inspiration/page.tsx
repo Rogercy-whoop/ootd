@@ -63,7 +63,7 @@ export default function InspirationPage() {
                  )}
                 <p className="whitespace-pre-wrap text-sm text-foreground/90 line-clamp-4">{inspiration.description}</p>
               </CardContent>
-              <Button variant="destructive" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-full h-8 w-8" onClick={() => removeInspirationItem(inspiration.id)}>
+              <Button variant="destructive" size="icon" className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity rounded-full h-8 w-8" onClick={() => removeInspirationItem(inspiration.id)}>
                 <Trash2 className="h-4 w-4" />
                 <span className="sr-only">Delete Inspiration</span>
               </Button>

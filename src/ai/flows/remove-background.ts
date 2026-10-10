@@ -43,8 +43,9 @@ const removeBackgroundFlow = ai.defineFlow(
     try {
       const apiToken = process.env.REPLICATE_API_TOKEN;
       if (!apiToken) {
-        console.error('No REPLICATE_API_TOKEN in environment');
-        throw new Error('REPLICATE_API_TOKEN is not set in the environment.');
+        // Background removal is optional. Without a Replicate token, keep the photo
+        // as it is; nothing is uploaded anywhere.
+        return { photoDataUri: input.photoDataUri };
       }
 
       // Detect MIME type and strip prefix

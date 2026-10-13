@@ -22,6 +22,10 @@ import { cn } from '@/lib/utils';
 import { useUI } from '@/context/UIContext';
 import { useUserPreferences } from '@/context/UserPreferencesContext';
 import { useAuth } from '@/context/AuthContext';
+import { isLoginEnabled } from '@/lib/firebase';
+
+// Free closets hold this many items (the onboarding asks for exactly this many).
+const MAX_FREE_CLOSET_ITEMS = 5;
 
 export default function ClosetPage() {
   const { closetItems, addClosetItem, removeClosetItem, loading: closetLoading } = useCloset();
@@ -82,8 +86,16 @@ export default function ClosetPage() {
     // after a successful payment. For now, we'll assume no one is premium.
     const isPremium = false;
 
-    if (closetItems.length >= 5) {
-      if (!user) { // If it's a guest user
+    if (closetItems.length >= MAX_FREE_CLOSET_ITEMS) {
+      if (!isLoginEnabled) { // Guest-only mode: there is no account to upgrade to
+        toast({
+            title: "Your closet is full",
+            description: `This free version holds up to ${MAX_FREE_CLOSET_ITEMS} items. Remove an item to add a new one.`,
+            duration: 5000,
+        });
+        setIsDraggingOver(false);
+        return;
+      } else if (!user) { // If it's a guest user
         setLoginModalOpen(true);
         toast({
             title: "Create an Account to Add More",
@@ -169,13 +181,17 @@ export default function ClosetPage() {
     setLoading(true);
 
     try {
-      setLoadingMessage('Removing background...');
+      setLoadingMessage('Processing image...');
       const removedBgResult = await removeBackground({ photoDataUri: preview });
       const newPreview = removedBgResult.photoDataUri;
-      
+
       setLoadingMessage('Analyzing item...');
       const result = await tagClothingItem({ photoDataUri: newPreview, gender: preferences.gender });
-      
+      if ('error' in result) {
+        setError(result.error);
+        return;
+      }
+
       await addClosetItem({
         photoDataUri: newPreview,
         category: result.category,
@@ -219,7 +235,7 @@ export default function ClosetPage() {
       <div className="mb-8">
         <h1 className="font-headline text-4xl font-bold tracking-tight lg:text-5xl">My Closet</h1>
         <p className="mt-2 text-lg text-foreground/80">
-          Upload your clothes and build your digital wardrobe. You have {closetItems.length} items.
+          Upload your clothes and build your digital wardrobe. You have {closetItems.length} of {MAX_FREE_CLOSET_ITEMS} items.
         </p>
       </div>
 
@@ -228,7 +244,7 @@ export default function ClosetPage() {
           <CardTitle className="font-headline text-2xl flex items-center gap-2">
             <Plus className="w-6 h-6 text-accent" /> Add New Item
           </CardTitle>
-          <CardDescription>Upload a photo of a clothing item. We'll resize it, remove the background, and tag it for you.</CardDescription>
+          <CardDescription>Upload a photo of a clothing item. We'll resize it and our AI will tag it for you.</CardDescription>
         </CardHeader>
         <CardContent>
           {!preview && !loading && (
@@ -287,7 +303,7 @@ export default function ClosetPage() {
       </Card>
 
       <div>
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
           <h2 className="font-headline text-3xl font-bold">Your Wardrobe</h2>
           <div className="flex items-center gap-2">
             <Button
@@ -366,7 +382,7 @@ export default function ClosetPage() {
                       ))}
                     </div>
                 </CardFooter>
-                <Button variant="destructive" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-full h-8 w-8" onClick={() => removeClosetItem(item.id)}>
+                <Button variant="destructive" size="icon" className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity rounded-full h-8 w-8" onClick={() => removeClosetItem(item.id)}>
                     <Trash2 className="h-4 w-4" />
                 </Button>
               </Card>

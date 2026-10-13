@@ -25,7 +25,12 @@ export const isFirebaseConfigured =
   firebaseConfig.authDomain &&
   firebaseConfig.projectId;
 
-if (isFirebaseConfigured) {
+// Accounts are off unless NEXT_PUBLIC_ENABLE_LOGIN=true. With them off, everyone is a
+// guest and their closet lives only in their own browser (localStorage).
+export const isLoginEnabled =
+  process.env.NEXT_PUBLIC_ENABLE_LOGIN === 'true' && !!isFirebaseConfigured;
+
+if (isLoginEnabled) {
     try {
         app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
         storage = getStorage(app);
@@ -34,7 +39,7 @@ if (isFirebaseConfigured) {
     } catch (error) {
         console.error("Firebase initialization error:", error);
     }
-} else {
+} else if (process.env.NEXT_PUBLIC_ENABLE_LOGIN === 'true') {
     console.warn("Firebase configuration is missing. Please set the required environment variables in your .env file.");
 }
 

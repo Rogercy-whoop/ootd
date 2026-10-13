@@ -4,19 +4,20 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Sparkles, LogOut, User as UserIcon, ChevronDown } from 'lucide-react';
+import { Sparkles, LogOut, User as UserIcon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { isLoginEnabled } from '@/lib/firebase';
 import { Button } from './ui/button';
 import { useUI } from '@/context/UIContext';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { LoginSignupForm } from './LoginSignupForm';
 import { UpgradeModal } from './UpgradeModal';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/closet', label: 'My Closet' },
+  { href: '/inspiration', label: 'Inspiration' },
+];
 
 export function Header() {
   const pathname = usePathname() || '';
@@ -36,38 +37,11 @@ export function Header() {
           </Link>
           <div className="flex items-center gap-4">
              <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-                <Link href="/" className={cn('transition-colors hover:text-primary', pathname === '/' ? 'text-primary' : 'text-foreground/60')}>Home</Link>
-                <Link href="/closet" className={cn('transition-colors hover:text-primary', pathname === '/closet' ? 'text-primary' : 'text-foreground/60')}>My Closet</Link>
-                <Link href="/inspiration" className={cn('transition-colors hover:text-primary', pathname === '/inspiration' ? 'text-primary' : 'text-foreground/60')}>Inspiration</Link>
-                <Link href="/viewer" className={cn('transition-colors hover:text-primary', pathname === '/viewer' ? 'text-primary' : 'text-foreground/60')}>3D Viewer</Link>
-                
-                {process.env.NODE_ENV !== 'production' && (
-                  <DropdownMenu>
-                      <DropdownMenuTrigger className={cn(
-                          'flex items-center gap-1 transition-colors hover:text-primary focus:outline-none',
-                          pathname.startsWith('/debug') ? 'text-primary' : 'text-foreground/60'
-                      )}>
-                          Debug Tools
-                          <ChevronDown className="h-4 w-4" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                          <DropdownMenuItem asChild>
-                              <Link href="/debug/models">AI Models</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                              <Link href="/debug/premium">Premium Modal</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                              <Link href="/debug/onboarding">Onboarding Flow</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                              <Link href="/debug/model-preview">3D Model Preview</Link>
-                          </DropdownMenuItem>
-                      </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
+                {navLinks.map(link => (
+                  <Link key={link.href} href={link.href} className={cn('transition-colors hover:text-primary', pathname === link.href ? 'text-primary' : 'text-foreground/60')}>{link.label}</Link>
+                ))}
             </nav>
-            {user ? (
+            {isLoginEnabled && (user ? (
                 <Button variant="ghost" size="sm" onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
@@ -77,9 +51,15 @@ export function Header() {
                     <UserIcon className="mr-2 h-4 w-4" />
                     Login / Sign Up
                 </Button>
-            )}
+            ))}
           </div>
         </div>
+        {/* On phones the desktop links are hidden, so show them as a row under the logo. */}
+        <nav className="md:hidden flex justify-around border-t text-sm font-medium">
+          {navLinks.map(link => (
+            <Link key={link.href} href={link.href} className={cn('flex-1 py-2 text-center transition-colors', pathname === link.href ? 'text-primary font-semibold' : 'text-foreground/60')}>{link.label}</Link>
+          ))}
+        </nav>
       </header>
       <Dialog open={isLoginModalOpen} onOpenChange={setLoginModalOpen}>
         <DialogContent className="sm:max-w-md">

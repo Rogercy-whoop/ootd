@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import { Header } from './Header';
 
 export function AuthWrapper({ children }: { children: ReactNode }) {
@@ -37,6 +38,9 @@ export function AuthWrapper({ children }: { children: ReactNode }) {
         <Header />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             {children}
+            <footer className="mt-12 border-t pt-4 text-center text-xs text-muted-foreground">
+              <Link href="/privacy" className="underline">Privacy</Link>
+            </footer>
         </main>
     </div>
   );

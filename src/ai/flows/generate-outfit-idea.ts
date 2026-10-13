@@ -10,12 +10,9 @@
  * - GenerateOutfitIdeaOutput - The return type for the generateOutfitIdea function.
  */
 
-import {ai} from '@/ai/genkit';
-import {getCurrentWeather, fetchWeather} from '@/ai/tools/weather';
+import {fetchWeather} from '@/ai/tools/weather';
+import {generateJson, friendlyAiError} from '@/ai/gemini';
 import {z} from 'zod';
-
-// We'll use Gemini directly instead of through genkit plugins
-const modelToUse = 'gemini-1.5-pro';
 
 const ClothingItemSchema = z.object({
   id: z.string().describe('A unique identifier for the clothing item.'),
@@ -77,19 +74,16 @@ const GenerateOutfitIdeaOutputSchema = z.object({
 
 export type GenerateOutfitIdeaOutput = z.infer<typeof GenerateOutfitIdeaOutputSchema>;
 
-export async function generateOutfitIdea(input: GenerateOutfitIdeaInput): Promise<GenerateOutfitIdeaOutput> {
-  // Check if Gemini API key is available before running the flow
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("No Gemini API key found. Please set GEMINI_API_KEY in your .env file.");
+export async function generateOutfitIdea(input: GenerateOutfitIdeaInput): Promise<GenerateOutfitIdeaOutput | { error: string }> {
+  try {
+    return await generateOutfitWithGemini(input);
+  } catch (error) {
+    return { error: friendlyAiError(error) };
   }
-  return generateOutfitIdeaFlow(input);
 }
 
 // Direct Gemini integration for outfit generation
 const generateOutfitWithGemini = async (input: GenerateOutfitIdeaInput): Promise<GenerateOutfitIdeaOutput> => {
-  const { GoogleGenerativeAI } = await import('@google/generative-ai');
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
   // Get weather data if available
   let weatherData = null;
@@ -174,36 +168,12 @@ Return ONLY a JSON object with this exact structure:
   ]
 }`;
 
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  const text = response.text();
-  
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        outfitDescription: parsed.outfitDescription || 'A stylish outfit suggestion',
-        itemIds: parsed.itemIds || [],
-        missingItems: parsed.missingItems || [],
-        weatherWarnings: parsed.weatherWarnings || [],
-        alternativeOutfits: parsed.alternativeOutfits || []
-      };
-    }
-  } catch (error) {
-    console.error('Failed to parse Gemini response:', error);
-  }
-  
-    // Fallback response
+  const parsed = await generateJson(prompt);
   return {
-    outfitDescription: 'A stylish outfit suggestion based on your preferences and available items.',
-    itemIds: input.closetItems ? input.closetItems.slice(0, 2).map(item => item.id) : [],
-    missingItems: [],
-    weatherWarnings: [],
-    alternativeOutfits: []
+    outfitDescription: parsed.outfitDescription || 'A stylish outfit suggestion',
+    itemIds: parsed.itemIds || [],
+    missingItems: parsed.missingItems || [],
+    weatherWarnings: parsed.weatherWarnings || [],
+    alternativeOutfits: parsed.alternativeOutfits || []
   };
-};
-
-const generateOutfitIdeaFlow = async (input: GenerateOutfitIdeaInput): Promise<GenerateOutfitIdeaOutput> => {
-  return generateOutfitWithGemini(input);
 };

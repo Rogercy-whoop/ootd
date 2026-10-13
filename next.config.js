@@ -17,7 +17,7 @@ const nextConfig = {
     ],
   },
   experimental: {
-    serverComponentsExternalPackages: ['handlebars', 'genkit', 'genkitx-openai'],
+    serverComponentsExternalPackages: ['handlebars', 'genkit'],
     serverActions: {
       bodySizeLimit: '10mb',
     },

@@ -9,7 +9,7 @@ Most of this code was written by AI tools working from my instructions. This fil
 - **What git can and cannot show:** all 45 commits from 4–11 July 2025 (`672c7ff` → `c4bff4d`) are under my GitHub account, including the ones made from Firebase Studio and Cursor. Git therefore cannot separate lines the AI wrote from lines I wrote, or tell which tool made which commit.
 - **My part:** as Team 11's team leader and technical lead, I built the interface by directing these tools, integrated the AI models and their APIs (Gemini for tagging and outfit ideas, Replicate for background removal), and set up the Firebase project and its hosting. See [ROLES.md](ROLES.md) for the rest of the team.
 
-## October 2026: finishing and launching it, with Claude Code
+## October 2026: the relaunch, with Claude Code
 
 - **Tool:** Claude Code (Anthropic's coding agent), working in my copy of this repo under my direction, 10–13 October 2026.
 - **What it did:** read the whole project, ran it, found what was broken, wrote the fixes and tested them on the live site. Every commit from `f6cbcb7` onwards was written by Claude Code and is marked `Co-Authored-By: Claude` in the git log. It also drafted this file, the README and ROLES.md from facts I confirmed.
@@ -23,7 +23,7 @@ Most of this code was written by AI tools working from my instructions. This fil
 
 ### Decisions that were mine
 
-- To build the launch on the latest GitHub version rather than the older copy in my Firebase Studio workspace.
+- To relaunch the latest GitHub version rather than the older copy in my Firebase Studio workspace.
 - To launch quickly with the basic features working, rather than finish everything first.
 - **Guest-only, no accounts,** so people's clothing photos stay in their own browser instead of on our servers.
 - **To remove the payment links** instead of launching a Premium plan that did not work, and to keep our original 5-item free limit.

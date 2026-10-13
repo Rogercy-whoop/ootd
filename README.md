@@ -12,7 +12,7 @@ Yu Chen (Roger) · Grade 12 · Suzhou, China
   <img src="docs/screenshots/phone-closet.png" width="250" alt="The closet sorted by category, with the AI's tags and colours">
 </p>
 
-*From left: set-up, an outfit for "coffee with friends on a weekend afternoon", and the closet with the tags and colours the AI read from each photo. Screenshots from the live site on a phone-sized screen; the "clothes" are simple drawings I used as test photos.*
+*From left: set-up, an outfit for "coffee with friends on a weekend afternoon", and the closet with the tags and colours the AI read from each photo. Screenshots from the live site on a phone-sized screen; the "clothes" are simple drawings I used as test photos. On a computer it looks like [this](docs/screenshots/desktop-closet.png).*
 
 ---
 

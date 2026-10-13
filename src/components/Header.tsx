@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Sparkles, LogOut, User as UserIcon, ChevronDown } from 'lucide-react';
+import { Sparkles, LogOut, User as UserIcon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { isLoginEnabled } from '@/lib/firebase';
 import { Button } from './ui/button';
@@ -12,12 +12,6 @@ import { useUI } from '@/context/UIContext';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { LoginSignupForm } from './LoginSignupForm';
 import { UpgradeModal } from './UpgradeModal';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -46,32 +40,6 @@ export function Header() {
                 {navLinks.map(link => (
                   <Link key={link.href} href={link.href} className={cn('transition-colors hover:text-primary', pathname === link.href ? 'text-primary' : 'text-foreground/60')}>{link.label}</Link>
                 ))}
-
-                {process.env.NODE_ENV !== 'production' && (
-                  <DropdownMenu>
-                      <DropdownMenuTrigger className={cn(
-                          'flex items-center gap-1 transition-colors hover:text-primary focus:outline-none',
-                          pathname.startsWith('/debug') ? 'text-primary' : 'text-foreground/60'
-                      )}>
-                          Debug Tools
-                          <ChevronDown className="h-4 w-4" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                          <DropdownMenuItem asChild>
-                              <Link href="/debug/models">AI Models</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                              <Link href="/debug/premium">Premium Modal</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                              <Link href="/debug/onboarding">Onboarding Flow</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                              <Link href="/debug/model-preview">3D Model Preview</Link>
-                          </DropdownMenuItem>
-                      </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
             </nav>
             {isLoginEnabled && (user ? (
                 <Button variant="ghost" size="sm" onClick={logout}>

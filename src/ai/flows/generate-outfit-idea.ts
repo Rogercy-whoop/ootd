@@ -11,7 +11,7 @@
  */
 
 import {fetchWeather} from '@/ai/tools/weather';
-import {getGeminiModel, parseJsonReply, friendlyAiError} from '@/ai/gemini';
+import {generateJson, friendlyAiError} from '@/ai/gemini';
 import {z} from 'zod';
 
 const ClothingItemSchema = z.object({
@@ -84,7 +84,6 @@ export async function generateOutfitIdea(input: GenerateOutfitIdeaInput): Promis
 
 // Direct Gemini integration for outfit generation
 const generateOutfitWithGemini = async (input: GenerateOutfitIdeaInput): Promise<GenerateOutfitIdeaOutput> => {
-  const model = getGeminiModel();
 
   // Get weather data if available
   let weatherData = null;
@@ -169,8 +168,7 @@ Return ONLY a JSON object with this exact structure:
   ]
 }`;
 
-  const result = await model.generateContent(prompt);
-  const parsed = parseJsonReply(result.response.text());
+  const parsed = await generateJson(prompt);
   return {
     outfitDescription: parsed.outfitDescription || 'A stylish outfit suggestion',
     itemIds: parsed.itemIds || [],

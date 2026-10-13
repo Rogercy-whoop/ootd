@@ -1,23 +1,56 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, type Part } from '@google/generative-ai';
 
-// One place to choose the Gemini model. Set GEMINI_MODEL to switch models without a code change.
-const DEFAULT_MODEL = 'gemini-3.5-flash';
+// Models to try, in order. On the free tier the larger "flash" models often answered
+// "503 high demand" (one took over 3 minutes) while the "flash-lite" models replied in
+// about a second, so the app uses flash-lite and falls through to the next if one is busy.
+// Set GEMINI_MODEL to put a different model first without a code change.
+const DEFAULT_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite'];
 
-export function getGeminiModel() {
+// Give up on a model after this long rather than leave the user waiting.
+const REQUEST_TIMEOUT_MS = 12_000;
+
+function modelNames(): string[] {
+  const configured = process.env.GEMINI_MODEL;
+  return configured ? [configured, ...DEFAULT_MODELS.filter(m => m !== configured)] : DEFAULT_MODELS;
+}
+
+function isBusy(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('503') || /overloaded|unavailable|high demand|abort|timed? ?out/i.test(message);
+}
+
+// Sends a prompt (text and optional image parts) to Gemini and returns the parsed JSON reply.
+export async function generateJson(parts: string | Array<string | Part>): Promise<any> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is not set on the server.');
   }
   const genAI = new GoogleGenerativeAI(apiKey);
-  return genAI.getGenerativeModel({
-    model: process.env.GEMINI_MODEL || DEFAULT_MODEL,
-    // Ask Gemini for raw JSON so we don't have to dig it out of prose.
-    generationConfig: { responseMimeType: 'application/json' },
-  });
+
+  let lastError: unknown;
+  for (const name of modelNames()) {
+    const model = genAI.getGenerativeModel(
+      {
+        model: name,
+        // Ask Gemini for raw JSON so we don't have to dig it out of prose.
+        generationConfig: { responseMimeType: 'application/json' },
+      },
+      { timeout: REQUEST_TIMEOUT_MS },
+    );
+    try {
+      const result = await model.generateContent(parts);
+      return parseJsonReply(result.response.text());
+    } catch (error) {
+      lastError = error;
+      if (!isBusy(error)) throw error;
+      console.warn(`[gemini] ${name} is busy, trying the next model`);
+    }
+  }
+  throw lastError;
 }
 
 // Turns a data URI ("data:image/webp;base64,....") into the inline image part Gemini expects.
-export function imagePartFromDataUri(dataUri: string) {
+export function imagePartFromDataUri(dataUri: string): Part {
   const match = dataUri.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
   if (!match) {
     throw new Error('Invalid image data.');
@@ -26,7 +59,7 @@ export function imagePartFromDataUri(dataUri: string) {
 }
 
 // Parses Gemini's JSON reply, tolerating stray text around the object.
-export function parseJsonReply(text: string): any {
+function parseJsonReply(text: string): any {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error('The AI reply was not valid JSON.');
@@ -45,7 +78,7 @@ export function friendlyAiError(error: unknown): string {
   if (message.includes('429') || /quota|rate limit|resource.?exhausted/i.test(message)) {
     return "The app has reached its free AI usage limit for now. Please try again in a few minutes.";
   }
-  if (message.includes('503') || /overloaded|unavailable/i.test(message)) {
+  if (isBusy(error)) {
     return 'The AI service is busy right now. Please try again in a moment.';
   }
   return 'Something went wrong while talking to the AI. Please try again.';

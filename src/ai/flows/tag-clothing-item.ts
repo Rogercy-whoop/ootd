@@ -7,7 +7,7 @@
 
 import {z} from 'zod';
 import type { Gender } from '@/lib/types';
-import { getGeminiModel, imagePartFromDataUri, parseJsonReply, friendlyAiError } from '@/ai/gemini';
+import { generateJson, imagePartFromDataUri, friendlyAiError } from '@/ai/gemini';
 
 const TagClothingItemInputSchema = z.object({
   photoDataUri: z
@@ -59,19 +59,12 @@ export async function tagClothingItem({ photoDataUri, gender }: { photoDataUri: 
     return { error: 'That image is too large. Please try a smaller photo.' };
   }
 
-  const maxRetries = 3;
-  const retryDelayMs = 2000;
-  let lastError: any = null;
+  try {
+    const genderContext = gender && gender !== 'prefer-not-to-say' 
+      ? `\nUser Gender: ${gender} - Please consider ${gender}-specific clothing categories and styles.`
+      : '\nUser Gender: Not specified - Use general clothing categories.';
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const model = getGeminiModel();
-
-      const genderContext = gender && gender !== 'prefer-not-to-say' 
-        ? `\nUser Gender: ${gender} - Please consider ${gender}-specific clothing categories and styles.`
-        : '\nUser Gender: Not specified - Use general clothing categories.';
-
-      const prompt = `You are an expert fashion analyst specializing in clothing item classification and analysis. Analyze this clothing item image with high precision.
+    const prompt = `You are an expert fashion analyst specializing in clothing item classification and analysis. Analyze this clothing item image with high precision.
 
 Image: [The clothing item image]${genderContext}
 
@@ -97,30 +90,18 @@ Analysis Guidelines:
 
 Return ONLY the JSON object, no other text or explanations.`;
 
-      const result = await model.generateContent([prompt, imagePartFromDataUri(photoDataUri)]);
-      const parsed = parseJsonReply(result.response.text());
-      const validatedResult = {
-        category: parsed.category || 'unknown',
-        subCategory: parsed.subCategory || 'unknown',
-        tags: Array.isArray(parsed.tags) ? parsed.tags.filter((tag: any) => typeof tag === 'string') : [],
-        dominantColors: Array.isArray(parsed.dominantColors) ? parsed.dominantColors.filter((color: any) => typeof color === 'string' && color.startsWith('#')) : [],
-        hasPattern: Boolean(parsed.hasPattern),
-        patternDescription: parsed.patternDescription || ''
-      };
-      return validatedResult;
-    } catch (error: any) {
-      lastError = error;
-      const isRetryable = error?.message?.includes('503') || error?.message?.includes('overloaded') || error?.message?.includes('Service Unavailable');
-      console.error(`Error in tagClothingItem (attempt ${attempt}):`, error);
-      if (attempt < maxRetries && isRetryable) {
-        console.log(`Retrying Gemini tagging in ${retryDelayMs}ms... (attempt ${attempt + 1} of ${maxRetries})`);
-        await new Promise(res => setTimeout(res, retryDelayMs));
-        continue;
-      } else {
-        break;
-      }
-    }
+    const parsed = await generateJson([prompt, imagePartFromDataUri(photoDataUri)]);
+    const validatedResult = {
+      category: parsed.category || 'unknown',
+      subCategory: parsed.subCategory || 'unknown',
+      tags: Array.isArray(parsed.tags) ? parsed.tags.filter((tag: any) => typeof tag === 'string') : [],
+      dominantColors: Array.isArray(parsed.dominantColors) ? parsed.dominantColors.filter((color: any) => typeof color === 'string' && color.startsWith('#')) : [],
+      hasPattern: Boolean(parsed.hasPattern),
+      patternDescription: parsed.patternDescription || ''
+    };
+    return validatedResult;
+  } catch (error) {
+    // Report the failure instead of saving an "unknown" item to the closet.
+    return { error: friendlyAiError(error) };
   }
-  // Report the failure instead of saving an "unknown" item to the closet.
-  return { error: friendlyAiError(lastError) };
 }

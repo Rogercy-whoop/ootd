@@ -681,7 +681,7 @@ export default function OutfitGeneratorPage() {
             Describe an occasion for a tailored suggestion, or leave it blank for a general idea.
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            New here? Feel free to add one or two items whenever you're free! The more items in your closet, the better your outfit suggestions will be.
+            New here? The set-up asks for 5 items: 2 tops, 2 bottoms and a pair of shoes.
           </p>
         </div>
         <div className="p-6 pt-0 space-y-6">

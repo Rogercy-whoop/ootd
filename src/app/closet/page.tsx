@@ -244,7 +244,7 @@ export default function ClosetPage() {
           <CardTitle className="font-headline text-2xl flex items-center gap-2">
             <Plus className="w-6 h-6 text-accent" /> Add New Item
           </CardTitle>
-          <CardDescription>Upload a photo of a clothing item. We'll resize it, remove the background, and tag it for you.</CardDescription>
+          <CardDescription>Upload a photo of a clothing item. We'll resize it and our AI will tag it for you.</CardDescription>
         </CardHeader>
         <CardContent>
           {!preview && !loading && (
@@ -303,7 +303,7 @@ export default function ClosetPage() {
       </Card>
 
       <div>
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
           <h2 className="font-headline text-3xl font-bold">Your Wardrobe</h2>
           <div className="flex items-center gap-2">
             <Button

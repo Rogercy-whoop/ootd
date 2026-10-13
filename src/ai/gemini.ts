@@ -78,8 +78,17 @@ export function friendlyAiError(error: unknown): string {
   if (message.includes('429') || /quota|rate limit|resource.?exhausted/i.test(message)) {
     return "The app has reached its free AI usage limit for now. Please try again in a few minutes.";
   }
+  if (/location is not supported/i.test(message)) {
+    // Gemini refuses requests from some regions, including mainland China.
+    return "The AI service isn't available from the region this server is running in.";
+  }
+  if (/api key not valid|api_key_invalid|permission.?denied/i.test(message)) {
+    return 'The AI service rejected this server\'s API key.';
+  }
   if (isBusy(error)) {
     return 'The AI service is busy right now. Please try again in a moment.';
   }
-  return 'Something went wrong while talking to the AI. Please try again.';
+  // Include the HTTP status (never the key) so failures can be told apart.
+  const status = message.match(/\[(\d{3})[^\]]*\]/)?.[1];
+  return `Something went wrong while talking to the AI${status ? ` (error ${status})` : ''}. Please try again.`;
 }

@@ -20,7 +20,7 @@ Yu Chen (Roger) · Grade 12 · Suzhou, China
 
 OOTD ("outfit of the day") was the company of Team 11, our three-person team at LaunchX, an entrepreneurship programme at Boston University, in summer 2025. It only works with clothes you already own: you photograph them once, and it suggests combinations from them. I was the team leader and technical lead (see [ROLES.md](ROLES.md)).
 
-The first version was built in July 2025 by directing AI coding tools (Firebase Studio's app builder and Cursor), and it never went online. In October 2026 I relaunched it, working with Claude Code: we fixed the AI calls, cut what didn't work and put it online. [AI-USE.md](AI-USE.md) says exactly which parts AI wrote.
+The first version was built in July 2025 by directing AI coding tools (Firebase Studio's app builder and Cursor), and it never went online. In October 2026 I came back to it and, working with Claude Code, fixed the AI calls, cut what didn't work and launched it for the first time. [AI-USE.md](AI-USE.md) says exactly which parts AI wrote.
 
 ## What it does today
 
@@ -95,7 +95,7 @@ To deploy your own copy on Netlify, import the repo and set `GEMINI_API_KEY` as 
 | When | What |
 |---|---|
 | 4–11 July 2025 | First version built with Firebase Studio and Cursor during LaunchX: 45 commits (`672c7ff` → `c4bff4d`). The app was not deployed; its Firebase Hosting address still shows Firebase's placeholder page, uploaded 9 July 2025. |
-| 10–13 October 2026 | Relaunch, done with Claude Code under my direction (`f6cbcb7` onwards): fixed the AI calls, made the app guest-only, removed payments and unfinished features, added a privacy page and phone layout, and deployed it on Netlify. |
+| 10–13 October 2026 | First public launch, done with Claude Code under my direction (`f6cbcb7` onwards): fixed the AI calls, made the app guest-only, removed payments and unfinished features, added a privacy page and phone layout, and deployed it on Netlify. |
 
 ## Team and AI use
 

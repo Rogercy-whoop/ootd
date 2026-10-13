@@ -43,3 +43,6 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+# private notes, never pushed
+ootd_summary_for_resume.md
+LAUNCH_AUDIT.md

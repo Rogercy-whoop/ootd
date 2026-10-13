@@ -2,7 +2,7 @@
 
 **Photograph five things from your wardrobe, and the app suggests what to wear today, matched to the weather and the occasion, using only clothes you own.**
 
-**Live:** https://ootdt11.netlify.app · Built by Team 11 at LaunchX (Boston University), summer 2025 · Launched publicly 13 October 2026
+**Live:** https://ootdt11.netlify.app · Launched by Team 11 at LaunchX (Boston University), summer 2025 · Web app public since 13 October 2026
 
 Yu Chen (Roger) · Grade 12 · Suzhou, China
 
@@ -20,7 +20,7 @@ Yu Chen (Roger) · Grade 12 · Suzhou, China
 
 OOTD ("outfit of the day") was the company of Team 11, our three-person team at LaunchX, an entrepreneurship programme at Boston University, in summer 2025. It only works with clothes you already own: you photograph them once, and it suggests combinations from them. I was the team leader and technical lead (see [ROLES.md](ROLES.md)).
 
-The first version was built in July 2025 by directing AI coding tools (Firebase Studio's app builder and Cursor), and it never went online. In October 2026 I relaunched it, working with Claude Code: we fixed the AI calls, cut what didn't work and put it online. [AI-USE.md](AI-USE.md) says exactly which parts AI wrote.
+In July 2025 Team 11 launched OOTD as a startup at LaunchX and presented it at demo day. I built the first version of the app by directing AI coding tools (Firebase Studio's app builder and Cursor), and it ran as a prototype. In October 2026 I relaunched the app, working with Claude Code: we fixed the AI calls, cut what didn't work, capped free use and put it online for anyone to use. [AI-USE.md](AI-USE.md) says exactly which parts AI wrote.
 
 ## What it does today
 
@@ -52,9 +52,10 @@ photo ──► browser: check type (PNG/JPG/WEBP), shrink to ≤1024 px WEBP
 
 Every number here comes from the code or from the live tests above.
 
-- **5 closet items.** Set-up asks for exactly 5, outfits need at least 5, and the closet holds at most 5 (`MAX_FREE_CLOSET_ITEMS` in [`src/app/closet/page.tsx`](src/app/closet/page.tsx)). To add a new item you remove one.
+- **5 free photo analyses per browser.** Each photo you add is analysed once by Gemini's vision model, and the free version allows five (`FREE_PHOTO_ANALYSES` in [`src/lib/free-analyses.ts`](src/lib/free-analyses.ts)). After that the browser cannot add more, even if you delete items. The count is kept in the browser, so clearing site data resets it. Outfit suggestions are not capped. The limit of five goes back to the first version: from its first commit (`672c7ff`, 4 July 2025), free closets held five AI-analysed items.
+- **5 closet items.** Set-up asks for exactly 5, outfits need at least 5, and the closet holds at most 5 (`MAX_FREE_CLOSET_ITEMS` in [`src/app/closet/page.tsx`](src/app/closet/page.tsx)).
 - **No accounts.** Your closet lives only in the browser you used. Clearing site data deletes it.
-- **No per-visitor cap on AI use.** The only limit is the Gemini free tier. When it is reached, the app says so and asks you to try later. It cannot run up a bill: the key's Google project has no billing attached.
+- **Shared AI limit.** Beyond the per-browser cap, the Gemini free tier limits total use. When it is reached, the app says so and asks you to try later. It cannot run up a bill: the key's Google project has no billing attached.
 - **Images:** PNG, JPG or WEBP only. The server refuses anything over about 1.5 MB after shrinking.
 - **Privacy:** the free tier lets Google use what is sent to improve its products, so the [privacy page](https://ootdt11.netlify.app/privacy) asks people to photograph clothes only, not themselves.
 - **Speed:** each photo takes several seconds to tag (up to 12 s in tests), and a busy moment at Gemini can make an upload fail. If that happens, try again.
@@ -94,8 +95,8 @@ To deploy your own copy on Netlify, import the repo and set `GEMINI_API_KEY` as 
 
 | When | What |
 |---|---|
-| 4–11 July 2025 | First version built with Firebase Studio and Cursor during LaunchX: 45 commits (`672c7ff` → `c4bff4d`). The app was not deployed; its Firebase Hosting address still shows Firebase's placeholder page, uploaded 9 July 2025. |
-| 10–13 October 2026 | Relaunch, done with Claude Code under my direction (`f6cbcb7` onwards): fixed the AI calls, made the app guest-only, removed payments and unfinished features, added a privacy page and phone layout, and deployed it on Netlify. |
+| July 2025 | Team 11 launched OOTD as a startup at LaunchX and presented it at demo day. I built the first version of the app with Firebase Studio and Cursor: 45 commits from 4–11 July (`672c7ff` → `c4bff4d`). Free users were limited to five AI-analysed closet items. The app ran as a prototype. |
+| 10–13 October 2026 | Relaunch, done with Claude Code under my direction (`f6cbcb7` onwards): fixed the AI calls, made the app guest-only, turned the five-item limit into a cap of five free photo analyses per browser, removed payments and unfinished features, added a privacy page and phone layout, and put the web app online on Netlify. |
 
 ## Team and AI use
 

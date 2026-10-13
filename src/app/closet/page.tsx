@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils';
 import { useUI } from '@/context/UIContext';
 import { useUserPreferences } from '@/context/UserPreferencesContext';
 import { useAuth } from '@/context/AuthContext';
-import { isLoginEnabled } from '@/lib/firebase';
+import { FREE_PHOTO_ANALYSES, photoAnalysesLeft, recordPhotoAnalysis } from '@/lib/free-analyses';
 
 // Free closets hold this many items (the onboarding asks for exactly this many).
 const MAX_FREE_CLOSET_ITEMS = 5;
@@ -86,16 +86,19 @@ export default function ClosetPage() {
     // after a successful payment. For now, we'll assume no one is premium.
     const isPremium = false;
 
+    // Every photo added costs one AI vision analysis, so the free version caps those.
+    if (photoAnalysesLeft(closetItems.length) === 0) {
+      toast({
+          title: "Free photo analyses used up",
+          description: `This free version includes ${FREE_PHOTO_ANALYSES} AI photo analyses per browser, and all ${FREE_PHOTO_ANALYSES} have been used.`,
+          duration: 6000,
+      });
+      setIsDraggingOver(false);
+      return;
+    }
+
     if (closetItems.length >= MAX_FREE_CLOSET_ITEMS) {
-      if (!isLoginEnabled) { // Guest-only mode: there is no account to upgrade to
-        toast({
-            title: "Your closet is full",
-            description: `This free version holds up to ${MAX_FREE_CLOSET_ITEMS} items. Remove an item to add a new one.`,
-            duration: 5000,
-        });
-        setIsDraggingOver(false);
-        return;
-      } else if (!user) { // If it's a guest user
+      if (!user) { // If it's a guest user
         setLoginModalOpen(true);
         toast({
             title: "Create an Account to Add More",
@@ -191,6 +194,7 @@ export default function ClosetPage() {
         setError(result.error);
         return;
       }
+      recordPhotoAnalysis(closetItems.length);
 
       await addClosetItem({
         photoDataUri: newPreview,
@@ -235,7 +239,8 @@ export default function ClosetPage() {
       <div className="mb-8">
         <h1 className="font-headline text-4xl font-bold tracking-tight lg:text-5xl">My Closet</h1>
         <p className="mt-2 text-lg text-foreground/80">
-          Upload your clothes and build your digital wardrobe. You have {closetItems.length} of {MAX_FREE_CLOSET_ITEMS} items.
+          Upload your clothes and build your digital wardrobe. You have {closetItems.length} of {MAX_FREE_CLOSET_ITEMS} items
+          and {photoAnalysesLeft(closetItems.length)} of {FREE_PHOTO_ANALYSES} free photo analyses left.
         </p>
       </div>
 

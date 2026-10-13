@@ -20,13 +20,14 @@ Most of this code was written by AI tools working from my instructions. This fil
   - "Enter location manually" called a weather service with the placeholder key `YOUR_API_KEY`, so it could never work.
   - The "Upgrade to Premium" buttons linked to Stripe checkout pages, but nothing granted Premium after someone paid.
   - The first Netlify deploy returned "Page not found" until a `netlify.toml` told Netlify how to serve a Next.js app.
+  - The free limit of five counted closet slots, so deleting and re-adding items gave unlimited free photo analyses. It now counts the analyses themselves.
 
 ### Decisions that were mine
 
 - To relaunch the latest GitHub version rather than the older copy in my Firebase Studio workspace.
 - To launch quickly with the basic features working, rather than finish everything first.
 - **Guest-only, no accounts,** so people's clothing photos stay in their own browser instead of on our servers.
-- **To remove the payment links** instead of launching a Premium plan that did not work, and to keep our original 5-item free limit.
+- **To remove the payment links** instead of launching a Premium plan that did not work, and to keep our original limit of five, now as a cap of five free photo analyses per browser.
 - To host on Netlify after Vercel's phone verification would not accept my number.
 - To take out the debug pages and the unfinished 3D viewer before sharing the link.
 - I created the Gemini API key (on the free tier, in our Firebase project) and the Netlify site, and entered the key into Netlify myself. Claude Code's test scripts read the key from my local settings file to call Gemini, but never printed it.

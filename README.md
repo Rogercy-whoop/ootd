@@ -18,7 +18,7 @@ Yu Chen (Roger) · Grade 12 · Suzhou, China
 
 ## What it is
 
-OOTD ("outfit of the day") was Team 11's company at LaunchX, an entrepreneurship programme at Boston University, in summer 2025. It only works with clothes you already own: you photograph them once, and it suggests combinations from them. I was the team leader and technical lead (see [ROLES.md](ROLES.md)).
+OOTD ("outfit of the day") was the company of Team 11, our three-person team at LaunchX, an entrepreneurship programme at Boston University, in summer 2025. It only works with clothes you already own: you photograph them once, and it suggests combinations from them. I was the team leader and technical lead (see [ROLES.md](ROLES.md)).
 
 The first version was built in July 2025 by directing AI coding tools (Firebase Studio's app builder and Cursor), and it never went online. In October 2026 I relaunched it, working with Claude Code: we fixed the AI calls, cut what didn't work and put it online. [AI-USE.md](AI-USE.md) says exactly which parts AI wrote.
 

@@ -1,6 +1,6 @@
 # Team and roles
 
-OOTD ("outfit of the day") was the company of **Team 11** at LaunchX, an entrepreneurship programme at Boston University, in summer 2025.
+OOTD ("outfit of the day") was the company of **Team 11**, a team of three, at LaunchX, an entrepreneurship programme at Boston University, in summer 2025.
 
 | Member | Main role |
 |---|---|

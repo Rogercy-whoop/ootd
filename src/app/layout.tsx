@@ -25,6 +25,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
+        {/* Netlify inserts an HTML comment (plus a line break) near the top of <head>.
+            React then sees nodes it did not render and abandons hydration with errors
+            #418/#423. This runs while the page is still loading, before React starts,
+            and removes stray comments and whitespace-only text from <head>. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var h=document.head,n=h&&h.firstChild;while(n){var next=n.nextSibling;if(n.nodeType===8||(n.nodeType===3&&!n.nodeValue.trim()))h.removeChild(n);n=next;}})();`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />

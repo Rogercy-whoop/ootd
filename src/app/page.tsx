@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { isLoginEnabled } from '@/lib/firebase';
+import { FREE_PHOTO_ANALYSES, photoAnalysesLeft, recordPhotoAnalysis } from '@/lib/free-analyses';
 import { useUI } from '@/context/UIContext';
 import { useUserPreferences } from '@/context/UserPreferencesContext';
 import { GenderSelection } from '@/components/GenderSelection';
@@ -397,6 +398,10 @@ export default function OutfitGeneratorPage() {
       setOnboardingError('Please select a file to upload.');
       return;
     }
+    if (photoAnalysesLeft(closetItems.length) === 0) {
+      setOnboardingError(`This browser has used its ${FREE_PHOTO_ANALYSES} free AI photo analyses.`);
+      return;
+    }
     setOnboardingError(null);
     setOnboardingLoading(true);
 
@@ -411,6 +416,7 @@ export default function OutfitGeneratorPage() {
         setOnboardingError(result.error);
         return;
       }
+      recordPhotoAnalysis(closetItems.length);
 
       addClosetItem({
         photoDataUri: newPreview,

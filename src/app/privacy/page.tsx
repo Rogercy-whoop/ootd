@@ -16,8 +16,9 @@ export default function PrivacyPage() {
       <section className="space-y-2">
         <h2 className="font-headline text-2xl font-semibold">What is stored, and where</h2>
         <p>
-          There are no accounts. Your closet photos, their tags and the outfits you save are kept
-          only in this browser on this device (the browser&apos;s local storage). We do not keep a
+          There are no accounts. Your closet photos, their tags, the outfits you save and a count of
+          the free photo analyses you have used are kept only in this browser on this device (the
+          browser&apos;s local storage). We do not keep a
           copy on a server or in a database. They stay until you delete them.
         </p>
       </section>

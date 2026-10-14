@@ -154,6 +154,8 @@ export default function ClosetPage() {
     if (selectedFile) {
       processFile(selectedFile);
     }
+    // Clear the input so picking the same photo again still triggers a change.
+    e.target.value = '';
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {

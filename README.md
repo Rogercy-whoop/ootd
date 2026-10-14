@@ -1,40 +1,120 @@
-# OOTD: outfit ideas from clothes you already own
+# OOTD: outfit of the day
 
-**Photograph five things from your wardrobe, and the app suggests what to wear today, matched to the weather and the occasion, using only clothes you own.**
+**Photograph five things from your wardrobe, and OOTD suggests what to wear today, matched to the weather and the occasion, using only clothes you own.**
 
-**Live:** https://ootdt11.netlify.app · Launched by Team 11 at LaunchX (Boston University), summer 2025 · Web app public since 13 October 2026
+**Open the app:** https://ootdt11.netlify.app (any phone or computer browser, no sign-up)
 
-Yu Chen (Roger) · Grade 12 · Suzhou, China
+Started at LaunchX (Boston University) by Team 11 · Maintained by Yu Chen (Roger)
 
 <p>
-  <img src="docs/screenshots/phone-setup.png" width="250" alt="Set-up on a phone: adding the first top">
-  <img src="docs/screenshots/phone-outfit.png" width="250" alt="An outfit chosen from the closet, with a weather alert and items worth adding">
-  <img src="docs/screenshots/phone-closet.png" width="250" alt="The closet sorted by category, with the AI's tags and colours">
+  <img src="docs/screenshots/3-add-photo.png" width="250" alt="Adding the first top during set-up">
+  <img src="docs/screenshots/4-outfit.png" width="250" alt="An outfit chosen from the closet, with a weather alert and items worth adding">
+  <img src="docs/screenshots/6-closet-items.png" width="250" alt="The closet sorted by category, with the AI's tags and colours">
 </p>
 
-*From left: set-up, an outfit for "coffee with friends on a weekend afternoon", and the closet with the tags and colours the AI read from each photo. Screenshots from the live site on a phone-sized screen; the "clothes" are simple drawings I used as test photos. On a computer it looks like [this](docs/screenshots/desktop-closet.png).*
+*All screenshots are from the current version on a phone-sized screen. The "clothes" are simple drawings used as test photos.*
 
 ---
 
-## What it is
+## Contents
 
-OOTD ("outfit of the day") was the company of Team 11, our three-person team at LaunchX, an entrepreneurship programme at Boston University, in summer 2025. It only works with clothes you already own: you photograph them once, and it suggests combinations from them. I was the team leader and technical lead (see [ROLES.md](ROLES.md)).
+- [Quick start](#quick-start)
+- [Pages and features](#pages-and-features)
+- [What the AI does](#what-the-ai-does)
+- [Free version limits](#free-version-limits)
+- [Privacy in short](#privacy-in-short)
+- [Troubleshooting](#troubleshooting)
+- [For developers](#for-developers)
+- [Team, AI use and licence](#team-ai-use-and-licence)
 
-In July 2025 Team 11 launched OOTD as a startup at LaunchX and presented it at demo day. I built the first version of the app by directing AI coding tools (Firebase Studio's app builder and Cursor), and it ran as a prototype. In October 2026 I relaunched the app, working with Claude Code: we fixed the AI calls, cut what didn't work, capped free use and put it online for anyone to use. [AI-USE.md](AI-USE.md) says exactly which parts AI wrote.
+## Quick start
 
-## What it does today
-
-| Step | What happens | Where it runs |
+| Step | What to do | |
 |---|---|---|
-| 1. Set-up | You choose how clothes should be labelled (male, female, non-binary or prefer not to say), then add **5 photos: 2 tops, 2 bottoms and 1 pair of shoes**. | Your browser |
-| 2. Tagging | Each photo is shrunk to at most 1024 px and sent to Google's Gemini AI, which returns the category, the specific type (e.g. "crew neck striped t-shirt"), style tags, main colours as hex codes and any pattern. | Server → Gemini |
-| 3. Outfit | You can type an occasion. The app looks up the current weather (from your location or a city you type), then Gemini picks items from your closet by ID, explains the colour choice, and adds 2–3 alternatives, weather warnings and items worth adding. Only text descriptions of your clothes are sent, not the photos. | Server → Gemini |
-| 4. Keep | Save outfits you like to **Inspiration**. **My Closet** sorts items by category and has an **Analysis** view that compares your closet with a fixed list of clothing types (rules, not AI). | Your browser |
+| 1 | Open https://ootdt11.netlify.app. A welcome screen appears the first time. Tap **Start Setup**. | <img src="docs/screenshots/1-welcome.png" width="160" alt="Welcome screen"> |
+| 2 | Choose how clothing types should be named: Male, Female, Non-binary or Prefer not to say. Tap **Continue**. | <img src="docs/screenshots/2-gender.png" width="160" alt="Choosing how clothes are named"> |
+| 3 | Add **5 photos: 2 tops, 2 bottoms and 1 pair of shoes**. For each one, tap the box, pick a photo, then tap **Add Item**. The AI reads each photo in a few seconds. | <img src="docs/screenshots/3-add-photo.png" width="160" alt="Adding a photo"> |
+| 4 | Tap **Start Generating**. Type an occasion if you like (for example "coffee with friends"), allow location or type a city for the weather, then tap **Generate Outfit**. | <img src="docs/screenshots/4-outfit.png" width="160" alt="An outfit suggestion"> |
+| 5 | Like the outfit? Tap ♡ to save it to **Inspiration**. | <img src="docs/screenshots/8-inspiration.png" width="160" alt="Saved outfits"> |
 
-## How it works
+**Tips for good photos:** one item per photo, laid flat or on a hanger, on a plain background in good light. Photograph clothes only, not people.
+
+## Pages and features
+
+### Home: create your outfit
+- **Occasion box** (optional): describe what you are dressing for.
+- **Weather line:** the current weather where you are. If location is blocked, tap **Enter location manually** and type a city.
+- **"Not from my closet" switch:** general outfit ideas instead of ones built from your closet.
+- **Generate Outfit:** the result card shows
+  - a short description of the outfit and why its colours work together;
+  - a **weather alert** when the weather calls for something you don't have;
+  - **Consider adding:** everyday items that would complete the look;
+  - **Suggested items from your closet**, with your own photos.
+- Buttons on the result card: the first ↻ shows the next option ("1 of 3"), the second ↻ asks for new ideas, and ♡ saves the outfit.
+
+### My Closet
+
+<img src="docs/screenshots/5-closet-top.png" width="250" alt="My Closet: item count, free analyses left and Add New Item">
+
+- The top line shows how many items you have and how many **free photo analyses** are left.
+- **Add New Item:** upload one more photo (see the [limits](#free-version-limits)).
+- Three views:
+  - **Organized:** items grouped by category and type, each with the AI's tags and colour swatches.
+  - **Grid:** all items as cards.
+  - **Analysis:** compares your closet with a list of common clothing types for the option you chose in set-up. This view uses fixed rules, not AI.
+- 🗑 removes an item.
+
+### Inspiration
+Outfits you saved with ♡. 🗑 removes one.
+
+### Privacy
+What is stored and what is sent to the AI: https://ootdt11.netlify.app/privacy
+
+## What the AI does
+
+OOTD uses Google's Gemini models, called only from the app's server.
+
+| Task | What is sent | What comes back |
+|---|---|---|
+| Tagging a photo | The photo, shrunk to at most 1024 px | Category, specific type (e.g. "crew neck striped t-shirt"), style tags, main colours as hex codes, and any pattern |
+| Building an outfit | Text descriptions of your items (not the photos), your occasion and the current weather | The outfit (items picked from your closet), why it works, alternatives, a weather alert and items worth adding |
+
+## Free version limits
+
+<img src="docs/screenshots/7-free-limit.png" width="250" alt="Message shown after five free photo analyses">
+
+- **5 free AI photo analyses per browser.** Each photo you add is analysed once. After five, this browser can't add more photos, even if you delete items. Requests that fail don't count. The count is kept in your browser, so clearing site data resets it. The limit of five has been part of OOTD since its first version. Set in `FREE_PHOTO_ANALYSES`, [`src/lib/free-analyses.ts`](src/lib/free-analyses.ts).
+- **5 closet items.** Set-up asks for exactly five, outfits need at least five, and the closet holds at most five.
+- **Outfit suggestions are not capped per browser.** All visitors share the AI's free daily limit; when it is reached, the app says so.
+- **Photos:** PNG, JPG or WEBP; up to about 1.5 MB after the app shrinks them.
+- **Speed:** tagging usually takes a few seconds, but can take up to about 30 seconds when the AI is busy.
+- **One browser, no account:** your closet lives in the browser you used and does not follow you to another device.
+
+## Privacy in short
+
+- No accounts and no database: your photos, their tags, your saved outfits and your free-analysis count stay in your own browser.
+- Each photo is sent to Google's Gemini API to be tagged. The app uses Gemini's free tier, under which Google may use what is sent to improve its products, so please photograph clothes only.
+- Your location (or the city you type) is used only to look up the weather from Open-Meteo, and is not stored.
+- To delete everything, remove items in the app or clear this site's data in your browser.
+
+Full details: [privacy page](https://ootdt11.netlify.app/privacy).
+
+## Troubleshooting
+
+| You see | What it means |
+|---|---|
+| "The AI service is busy right now" | The free AI is overloaded for a moment. Wait a little and try again; the failed attempt does not use a free analysis. |
+| "The app has reached its free AI usage limit for now" | All visitors share a daily AI limit. Try again later. |
+| "Free photo analyses used up" | This browser has used its five free photo analyses. |
+| "Location access denied" on the weather line | Tap **Enter location manually** and type a city. |
+| "Invalid file type" | Use a PNG, JPG or WEBP photo. |
+
+## For developers
+
+### How it works
 
 ```
-photo ──► browser: check type (PNG/JPG/WEBP), shrink to ≤1024 px WEBP
+photo ──► browser: check type (PNG/JPG/WEBP), shrink to ≤1024 px WEBP, check free analyses left
       ──► server action tagClothingItem ──► Gemini (image + prompt) ──► JSON tags
       ──► saved in the browser's localStorage (no database)
 
@@ -43,28 +123,11 @@ photo ──► browser: check type (PNG/JPG/WEBP), shrink to ≤1024 px WEBP
       └─ Gemini (closet as text + occasion + weather) ──► JSON outfit ──► shown on the page
 ```
 
-- **The API key stays on the server.** Gemini is only called from Next.js server actions ([`src/ai/`](src/ai/)), so visitors' browsers never see the key.
-- **Busy models fall through.** On the free tier the larger Gemini models often answered "503 high demand" (one took over 3 minutes), while `gemini-3.5-flash-lite` answered in about a second. The app tries flash-lite first, moves to the next model if one is busy, and gives up after 12 seconds ([`src/ai/gemini.ts`](src/ai/gemini.ts)).
-- **Errors are explained.** If the AI fails, the page says why (busy, usage limit reached, key or region rejected) instead of saving a blank "unknown" item.
-- **Measured on the live site** (13 October 2026, two full runs in a phone-sized browser with five test images each): tagging took 5.4–12.0 s per photo, and an outfit took 5.3–6.8 s.
+- **The API key stays on the server.** Gemini is only called from Next.js server actions ([`src/ai/`](src/ai/)), so visitors' browsers never see the key. The key is on Gemini's free tier, with no billing attached.
+- **Busy models fall through.** The app tries `gemini-3.5-flash-lite` first, moves to the next model if one is busy, and gives up on a model after 12 seconds ([`src/ai/gemini.ts`](src/ai/gemini.ts)).
+- **Errors are explained.** If the AI fails, the page says why (busy, usage limit reached, key or region rejected) instead of saving a blank item.
 
-## Limits of this version
-
-Every number here comes from the code or from the live tests above.
-
-- **5 free photo analyses per browser.** Each photo you add is analysed once by Gemini's vision model, and the free version allows five (`FREE_PHOTO_ANALYSES` in [`src/lib/free-analyses.ts`](src/lib/free-analyses.ts)). After that the browser cannot add more, even if you delete items. The count is kept in the browser, so clearing site data resets it. Outfit suggestions are not capped. The limit of five goes back to the first version: from its first commit (`672c7ff`, 4 July 2025), free closets held five AI-analysed items.
-- **5 closet items.** Set-up asks for exactly 5, outfits need at least 5, and the closet holds at most 5 (`MAX_FREE_CLOSET_ITEMS` in [`src/app/closet/page.tsx`](src/app/closet/page.tsx)).
-- **No accounts.** Your closet lives only in the browser you used. Clearing site data deletes it.
-- **Shared AI limit.** Beyond the per-browser cap, the Gemini free tier limits total use. When it is reached, the app says so and asks you to try later. It cannot run up a bill: the key's Google project has no billing attached.
-- **Images:** PNG, JPG or WEBP only. The server refuses anything over about 1.5 MB after shrinking.
-- **Privacy:** the free tier lets Google use what is sent to improve its products, so the [privacy page](https://ootdt11.netlify.app/privacy) asks people to photograph clothes only, not themselves.
-- **Speed:** each photo takes several seconds to tag (up to 12 s in tests), and a busy moment at Gemini can make an upload fail. If that happens, try again.
-- **Mainland China:** Gemini refuses requests from mainland China. The live site calls Gemini from Netlify's servers abroad, but I have not tested opening the site from mainland China without a VPN.
-- **Built but switched off:** email login with cloud sync (Firebase Auth and Firestore, `NEXT_PUBLIC_ENABLE_LOGIN`), and background removal (Replicate, `REPLICATE_API_TOKEN`). Background removal uploaded photos to publicly readable storage, so it stays off.
-- **Removed before launch:** the Stripe "Premium" payment links (paying unlocked nothing, because the step that grants Premium was never built), an unfinished 3D outfit viewer, and developer debug pages.
-- **Code debt:** there are no automated tests, and `next.config.js` skips type checks during builds. `tsc` reports 9 errors, all in the switched-off login code.
-
-## Tech stack
+### Tech stack
 
 | Part | Used |
 |---|---|
@@ -73,9 +136,8 @@ Every number here comes from the code or from the live tests above.
 | AI | Google Gemini API via `@google/generative-ai`; default model `gemini-3.5-flash-lite` |
 | Weather | Open-Meteo forecast and geocoding APIs |
 | Hosting | Netlify (Next.js runtime), deployed from this repo; config in [`netlify.toml`](netlify.toml) |
-| First version | Firebase Studio (Google's AI app builder) and Cursor; Firebase Studio's first plan is in [`docs/blueprint.md`](docs/blueprint.md) |
 
-## Run it locally
+### Run it locally
 
 You need Node.js 20 or later and a Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey).
 
@@ -91,18 +153,15 @@ Then open http://localhost:3000. In mainland China, Gemini answers "User locatio
 
 To deploy your own copy on Netlify, import the repo and set `GEMINI_API_KEY` as a secret environment variable. `netlify.toml` covers the rest.
 
-## History
+### Known gaps
 
-| When | What |
-|---|---|
-| July 2025 | Team 11 launched OOTD as a startup at LaunchX and presented it at demo day. I built the first version of the app with Firebase Studio and Cursor: 45 commits from 4–11 July (`672c7ff` → `c4bff4d`). Free users were limited to five AI-analysed closet items. The app ran as a prototype. |
-| 10–13 October 2026 | Relaunch, done with Claude Code under my direction (`f6cbcb7` onwards): fixed the AI calls, made the app guest-only, turned the five-item limit into a cap of five free photo analyses per browser, removed payments and unfinished features, added a privacy page and phone layout, and put the web app online on Netlify. |
+- Switched off in this version: email login with cloud sync (Firebase Auth and Firestore, `NEXT_PUBLIC_ENABLE_LOGIN`), and background removal (Replicate, `REPLICATE_API_TOKEN`).
+- No automated tests yet, and `next.config.js` skips type checks during builds; `tsc` reports 9 errors, all in the switched-off login code.
+- Not tested from mainland China without a VPN.
 
-## Team and AI use
+## Team, AI use and licence
 
-- [ROLES.md](ROLES.md): who did what in Team 11 at LaunchX.
-- [AI-USE.md](AI-USE.md): what Firebase Studio, Cursor and Claude Code wrote, and which decisions were mine.
-
-## Licence
-
-[MIT](LICENSE).
+- Started at LaunchX (Boston University) by **Team 11**: Roger (team leader and technical lead), Eileen and Quinten. Roles: [ROLES.md](ROLES.md).
+- How AI coding tools were used to build OOTD, and which decisions were Roger's: [AI-USE.md](AI-USE.md).
+- Maintained by Yu Chen (Roger).
+- Licence: [MIT](LICENSE).

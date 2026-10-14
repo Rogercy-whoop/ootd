@@ -152,15 +152,26 @@ export default function OutfitGeneratorPage() {
     }
   }, [user, authLoading]);
 
+  // Outfits built from your own clothes need the 5-item set-up. Until then (or with
+  // "Not from my closet" on), the AI gives general ideas, so anyone can try it first.
+  const closetReady = closetItems.length >= 5 || (testingMode && closetItems.length > 0);
+  const useGeneralIdeas = ignoreCloset || !closetReady;
+  // False if this browser no longer has enough free photo analyses to complete the closet.
+  const canFinishSetup = photoAnalysesLeft(closetItems.length) >= Math.max(0, 5 - closetItems.length);
+
+  const handleTryFirst = () => {
+    sessionStorage.setItem('onboardingComplete', 'true');
+    setShowOnboarding(false);
+    setTimeout(() => document.getElementById('occasion')?.focus(), 300);
+  };
+
+  const handleStartSetupAgain = () => {
+    resetOnboardingUploadState();
+    setOnboardingStep(1);
+    setShowOnboarding(true);
+  };
+
   const handleGenerate = async () => {
-    if (!testingMode && closetItems.length < 5) {
-      toast({
-        variant: 'destructive',
-        title: 'Action Required',
-        description: 'Please finish the first-time user instructions before starting. Add at least 5 items to your closet.',
-      });
-      return;
-    }
     setError(null);
     setLoading(true);
     setOutfitIdea(null);
@@ -168,7 +179,7 @@ export default function OutfitGeneratorPage() {
 
     try {
       // Sanitize closet items by removing the large image data to prevent exceeding server action limits.
-      const sanitizedClosetItems = (!ignoreCloset && closetItems.length > 0)
+      const sanitizedClosetItems = (!useGeneralIdeas && closetItems.length > 0)
         ? closetItems.map(({ photoDataUri, ...rest }) => rest)
         : undefined;
       
@@ -467,14 +478,17 @@ export default function OutfitGeneratorPage() {
               <DialogHeader>
                 <DialogTitle className="text-2xl font-headline flex items-center gap-2">
                   <PartyPopper className="w-6 h-6 text-accent" />
-                  Let's get started!
+                  Welcome to OOTD!
                 </DialogTitle>
                 <DialogDescription className="pt-2 text-base">
-                  Welcome to OOTD! To give you the best style advice, let's add five of your most common wear clothes to your new digital closet.
+                  Feel free to try our recommendations before adding anything: type in your occasion and we'll suggest some possible outfits for you.
                 </DialogDescription>
               </DialogHeader>
-              <p className="text-sm text-muted-foreground">This will help us better know your style and assist with better generations!</p>
-              <DialogFooter className="sm:justify-end pt-4">
+              <p className="text-sm text-muted-foreground">
+                And when you add clothes to your closet (five items for a basic set-up: 2 tops, 2 bottoms and a pair of shoes), you unlock more features: outfits built from your own clothes, plus your organised closet and its analysis.
+              </p>
+              <DialogFooter className="gap-2 sm:justify-end pt-4">
+                <Button variant="secondary" onClick={handleTryFirst}>Try it first</Button>
                 <Button onClick={() => setOnboardingStep(1)}>Start Setup</Button>
               </DialogFooter>
             </>
@@ -733,12 +747,11 @@ export default function OutfitGeneratorPage() {
                  <Skeleton className="h-5 w-24" />
                </div>
              ) : (
-                closetItems.length > 0 && (
-                    <div className="flex items-center space-x-2">
-                        <Switch id="ignore-closet-toggle" checked={ignoreCloset} onCheckedChange={setIgnoreCloset} />
-                        <Label htmlFor="ignore-closet-toggle" className="text-sm font-medium">Not from my closet</Label>
-                    </div>
-                )
+                // Stays on (and locked) until the closet has the 5 set-up items.
+                <div className="flex items-center space-x-2">
+                    <Switch id="ignore-closet-toggle" checked={useGeneralIdeas} disabled={!closetReady} onCheckedChange={setIgnoreCloset} />
+                    <Label htmlFor="ignore-closet-toggle" className="text-sm font-medium">Not from my closet</Label>
+                </div>
              )}
           </div>
           
@@ -762,22 +775,34 @@ export default function OutfitGeneratorPage() {
             </div>
           )}
           
-          {!ignoreCloset && !closetLoading && closetItems.length === 0 && !showOnboarding && (
+          {!closetLoading && !closetReady && !showOnboarding && !canFinishSetup && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Your Closet is Empty!</AlertTitle>
+              <AlertTitle>General ideas only</AlertTitle>
               <AlertDescription>
-                For personalized outfit suggestions, <Link href="/closet" className="font-semibold underline">add some items</Link> to your digital wardrobe. We'll give you general ideas in the meantime.
+                This browser has used its {FREE_PHOTO_ANALYSES} free photo analyses, so outfits will be general ideas rather than built from your closet.
               </AlertDescription>
             </Alert>
           )}
 
-          {!ignoreCloset && !closetLoading && closetItems.length > 0 && closetItems.length < 5 && (
+          {!closetLoading && closetItems.length === 0 && !showOnboarding && canFinishSetup && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Try it before adding anything</AlertTitle>
+              <AlertDescription>
+                Type an occasion and tap Generate Outfit for general ideas. To get outfits built from your own clothes,{' '}
+                <button type="button" onClick={handleStartSetupAgain} className="font-semibold underline">start the set-up</button>{' '}
+                and add 5 items: 2 tops, 2 bottoms and a pair of shoes.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {!closetLoading && closetItems.length > 0 && !closetReady && canFinishSetup && (
             <Alert variant="default" className="bg-accent/10 border-accent/50">
               <AlertCircle className="h-4 w-4 text-accent/80" />
-              <AlertTitle className="text-black font-semibold">Your Closet is a Great Start!</AlertTitle>
+              <AlertTitle className="text-black font-semibold">Almost there</AlertTitle>
               <AlertDescription className="text-black">
-                For more varied and accurate suggestions, try <Link href="/closet" className="font-semibold underline">adding more items</Link> to your closet. The more we know, the better your outfits!
+                <Link href="/closet" className="font-semibold underline">Add {5 - closetItems.length} more {5 - closetItems.length === 1 ? 'item' : 'items'}</Link> to get outfits built from your own clothes. Until then you'll get general ideas.
               </AlertDescription>
             </Alert>
           )}

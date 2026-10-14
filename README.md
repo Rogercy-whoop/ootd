@@ -29,13 +29,21 @@ Started at LaunchX (Boston University) by Team 11 · Maintained by Yu Chen (Roge
 
 ## Quick start
 
+**Try it first (no set-up needed)**
+
 | Step | What to do | |
 |---|---|---|
-| 1 | Open https://ootdt11.netlify.app. A welcome screen appears the first time. Tap **Start Setup**. | <img src="docs/screenshots/1-welcome.png" width="160" alt="Welcome screen"> |
-| 2 | Choose how clothing types should be named: Male, Female, Non-binary or Prefer not to say. Tap **Continue**. | <img src="docs/screenshots/2-gender.png" width="160" alt="Choosing how clothes are named"> |
-| 3 | Add **5 photos: 2 tops, 2 bottoms and 1 pair of shoes**. For each one, tap the box, pick a photo, then tap **Add Item**. The AI reads each photo in a few seconds. | <img src="docs/screenshots/3-add-photo.png" width="160" alt="Adding a photo"> |
-| 4 | Tap **Start Generating**. Type an occasion if you like (for example "coffee with friends"), allow location or type a city for the weather, then tap **Generate Outfit**. | <img src="docs/screenshots/4-outfit.png" width="160" alt="An outfit suggestion"> |
-| 5 | Like the outfit? Tap ♡ to save it to **Inspiration**. | <img src="docs/screenshots/8-inspiration.png" width="160" alt="Saved outfits"> |
+| 1 | Open https://ootdt11.netlify.app. A welcome pop-up appears the first time. Tap **Try it first**. | <img src="docs/screenshots/1-welcome.png" width="160" alt="Welcome pop-up with Try it first and Start Setup"> |
+| 2 | Type an occasion (for example "casual brunch"), allow location or type a city for the weather, then tap **Generate Outfit**. You get general outfit ideas, matched to the occasion and the weather. | <img src="docs/screenshots/0-general-ideas.png" width="160" alt="General outfit ideas before set-up"> |
+
+**Set up your closet (unlocks outfits from your own clothes)**
+
+| Step | What to do | |
+|---|---|---|
+| 3 | Tap **Start Setup** in the welcome pop-up, or **start the set-up** on the home page. Choose how clothing types should be named: Male, Female, Non-binary or Prefer not to say. Tap **Continue**. | <img src="docs/screenshots/2-gender.png" width="160" alt="Choosing how clothes are named"> |
+| 4 | Add **5 photos: 2 tops, 2 bottoms and 1 pair of shoes**. For each one, tap the box, pick a photo, then tap **Add Item**. The AI reads each photo in a few seconds. | <img src="docs/screenshots/3-add-photo.png" width="160" alt="Adding a photo"> |
+| 5 | Tap **Start Generating**, type an occasion if you like, then tap **Generate Outfit**. Now the outfit is built from your own clothes, with your photos. | <img src="docs/screenshots/4-outfit.png" width="160" alt="An outfit built from the closet"> |
+| 6 | Like the outfit? Tap ♡ to save it to **Inspiration**. | <img src="docs/screenshots/8-inspiration.png" width="160" alt="Saved outfits"> |
 
 **Tips for good photos:** one item per photo, laid flat or on a hanger, on a plain background in good light. Photograph clothes only, not people.
 
@@ -44,12 +52,12 @@ Started at LaunchX (Boston University) by Team 11 · Maintained by Yu Chen (Roge
 ### Home: create your outfit
 - **Occasion box** (optional): describe what you are dressing for.
 - **Weather line:** the current weather where you are. If location is blocked, tap **Enter location manually** and type a city.
-- **"Not from my closet" switch:** general outfit ideas instead of ones built from your closet.
+- **"Not from my closet" switch:** general outfit ideas instead of ones built from your closet. Until your closet has the 5 set-up items, the switch stays on, so anyone can try OOTD straight away. After set-up, turn it off for outfits built from your own clothes.
 - **Generate Outfit:** the result card shows
   - a short description of the outfit and why its colours work together;
   - a **weather alert** when the weather calls for something you don't have;
   - **Consider adding:** everyday items that would complete the look;
-  - **Suggested items from your closet**, with your own photos.
+  - **Suggested items from your closet**, with your own photos (after set-up).
 - Buttons on the result card: the first ↻ shows the next option ("1 of 3"), the second ↻ asks for new ideas, and ♡ saves the outfit.
 
 ### My Closet
@@ -84,7 +92,7 @@ OOTD uses Google's Gemini models, called only from the app's server.
 <img src="docs/screenshots/7-free-limit.png" width="250" alt="Message shown after five free photo analyses">
 
 - **5 free AI photo analyses per browser.** Each photo you add is analysed once. After five, this browser can't add more photos, even if you delete items. Requests that fail don't count. The count is kept in your browser, so clearing site data resets it. The limit of five has been part of OOTD since its first version. Set in `FREE_PHOTO_ANALYSES`, [`src/lib/free-analyses.ts`](src/lib/free-analyses.ts).
-- **5 closet items.** Set-up asks for exactly five, outfits need at least five, and the closet holds at most five.
+- **5 closet items.** Set-up asks for exactly five, outfits built from your own clothes need all five, and the closet holds at most five. General ideas work with an empty closet.
 - **Outfit suggestions are not capped per browser.** All visitors share the AI's free daily limit; when it is reached, the app says so.
 - **Photos:** PNG, JPG or WEBP; up to about 1.5 MB after the app shrinks them.
 - **Speed:** tagging usually takes a few seconds, but can take up to about 30 seconds when the AI is busy.
@@ -106,6 +114,7 @@ Full details: [privacy page](https://ootdt11.netlify.app/privacy).
 | "The AI service is busy right now" | The free AI is overloaded for a moment. Wait a little and try again; the failed attempt does not use a free analysis. |
 | "The app has reached its free AI usage limit for now" | All visitors share a daily AI limit. Try again later. |
 | "Free photo analyses used up" | This browser has used its five free photo analyses. |
+| "General ideas only" | This browser has used its free photo analyses before finishing the closet, so outfits will be general ideas. |
 | "Location access denied" on the weather line | Tap **Enter location manually** and type a city. |
 | "Invalid file type" | Use a PNG, JPG or WEBP photo. |
 

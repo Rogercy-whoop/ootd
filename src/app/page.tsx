@@ -393,6 +393,8 @@ export default function OutfitGeneratorPage() {
   const handleOnboardingFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) processOnboardingFile(selectedFile);
+    // Clear the input so picking the same photo again still triggers a change.
+    e.target.value = '';
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => { e.preventDefault(); setIsDraggingOver(true); };

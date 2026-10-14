@@ -583,11 +583,11 @@ export default function OutfitGeneratorPage() {
                   Your closet is ready to go. You can now generate your first outfit idea!
                 </DialogDescription>
               </DialogHeader>
-              <p className="text-sm">Wanna add more now? You can always add more items from the "My Closet" page.</p>
+              <p className="text-sm">You can see your items, with the tags our AI gave them, on the "My Closet" page.</p>
               <DialogFooter className="sm:justify-end pt-4">
                 <Button onClick={handleCompleteOnboarding}>Start Generating</Button>
                  <Button variant="secondary" asChild>
-                    <Link href="/closet" onClick={handleCompleteOnboarding}>Add More Items</Link>
+                    <Link href="/closet" onClick={handleCompleteOnboarding}>See My Closet</Link>
                  </Button>
               </DialogFooter>
             </>

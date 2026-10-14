@@ -85,7 +85,7 @@ export function GenderSelection({ onGenderSelect, selectedGender }: GenderSelect
       </div>
 
       <div className="text-center text-sm text-muted-foreground">
-        <p>You can change this later in your settings.</p>
+        <p>This only changes how clothing types are named and grouped in your closet.</p>
       </div>
     </div>
   );
